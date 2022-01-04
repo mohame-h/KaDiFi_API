@@ -121,15 +121,15 @@ namespace KaDiFi.Controllers
         }
 
         [HttpGet]
-        [Route("HomeData")]
-        public IActionResult GetSpecificMediaCategory()
+        [Route("MediaCategory")]
+        public IActionResult GetSpecificMediaCategory(int mediaCategory, int periodType)
         {
 
             var result = new General_ResultWithData();
 
             try
             {
-                var categoryMedia = _mediaBO.GetHomeMedia();
+                var categoryMedia = _mediaBO.GetCategoryMedia(mediaCategory, periodType);
                 if (!categoryMedia.IsSuccess)
                 {
                     result.HasError = true;

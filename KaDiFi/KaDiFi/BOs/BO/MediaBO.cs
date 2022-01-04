@@ -111,15 +111,17 @@ namespace KaDiFi.BOs
                         break;
                 }
 
-                var mediaArrange = (from tblmedia in _db.Media.Where(z => z.CategoryId == mediaCategory)
-                                    join tblviews in _db.MediaViews.Where(periodExpression)
-                                    on tblmedia.Id equals tblviews.MediaId
-                                    select new
-                                    {
-                                        MediaId = tblmedia.Id,
-                                        MediaName = tblmedia.FriendlyName,
-                                        ViewId = tblviews.Id
-                                    })
+                var media = (from tblmedia in _db.Media.Where(z => z.CategoryId == mediaCategory).ToList()
+                             join tblviews in _db.MediaViews.Where(periodExpression).ToList()
+                             on tblmedia.Id equals tblviews.MediaId
+                             into tblVout
+                             from tblviews in tblVout.DefaultIfEmpty()
+                             select new
+                             {
+                                 MediaId = tblmedia.Id,
+                                 MediaName = tblmedia.FriendlyName,
+                                 ViewId = tblviews.Id
+                             })
                              .GroupBy(z => z.MediaId)
                              .Select(z => new { z.Key, ViewsCount = z.Count() })
                              //.Take(10)
@@ -136,11 +138,7 @@ namespace KaDiFi.BOs
                                  Source = z.MediaData == null ? "Error" : z.MediaData.SourcePath
                              })
                              .ToList();
-
-
-                var categoryMedia = new Dictionary<string, List<MediaResult>>();
-
-
+                result.Data = media;
             }
             catch (Exception ex)
             {
@@ -150,6 +148,7 @@ namespace KaDiFi.BOs
 
             return result;
         }
+
         public General_Status RemoveMedia(string mediaId)
         {
             throw new NotImplementedException();
