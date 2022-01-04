@@ -5,7 +5,7 @@ using System.Text;
 
 namespace KaDiFi.Helpers
 {
-    public static class Helpers
+    public static class StaticHelpers
     {
         public static string Mask(this string text)
         {
@@ -20,8 +20,22 @@ namespace KaDiFi.Helpers
             var textConversion = Convert.FromBase64String(text);
             var additionalKeys = new byte[] { 0x0, 0x1, 0x2, 0x3 };
             return Encoding.Unicode.GetString(
-                ProtectedData.Unprotect(textConversion, additionalKeys, DataProtectionScope.CurrentUser));
+                ProtectedData.Unprotect(textConversion, additionalKeys, DataProtectionScope.LocalMachine));
         }
+
+        public static bool validateSpecialChars(string text)
+        {
+            var passwordChars = text.ToCharArray();
+            int specialChars = 0;
+            foreach (var c in passwordChars)
+            {
+                if (char.IsLetterOrDigit(c))
+                    specialChars++;
+            }
+
+            return specialChars > 0;
+        }
+
 
 
 

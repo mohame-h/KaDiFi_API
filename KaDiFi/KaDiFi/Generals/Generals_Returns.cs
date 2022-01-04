@@ -10,12 +10,18 @@ namespace KaDiFi.Entities
         public General_Result(bool hasError = false)
         {
             HasError = hasError;
+            ErrorsDictionary = new Dictionary<string, string>();
         }
 
         public bool HasError { get; set; }
         [DefaultValue("")]
         public string ErrorMessage { get; set; }
         public Dictionary<string, string> ErrorsDictionary { get; set; }
+    }
+
+    public class General_ResultWithData : General_Result
+    {
+        public General_ResultWithData() : base() { }
         public dynamic Data { get; set; }
     }
 
@@ -30,5 +36,12 @@ namespace KaDiFi.Entities
 
         public bool IsSuccess { get; set; }
         public string ErrorMessage { get; set; }
+    }
+
+    [NotMapped]
+    public class General_StatusWithData : General_Status
+    {
+        public General_StatusWithData() : base() { }
+        public dynamic Data { get; set; }
     }
 }

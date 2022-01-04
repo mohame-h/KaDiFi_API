@@ -1,71 +1,78 @@
-﻿using KaDiFi.BOs;
+﻿using KaDiFi.BOs.IBO;
 using KaDiFi.Entities;
+using KaDiFi.Helpers;
+using KaDiFi.Helpers.IHelper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 
 namespace KaDiFi.Controllers
 {
+    [Route("api/[controller]")]
     public class AccountController : Controller
     {
-        private AccountBO _accountBO;
+        private IAccountBO _accountBO;
+        private IAuthenticationHelper _auth;
 
-        public AccountController(AccountBO accountBO)
+        public AccountController(IAccountBO accountBO, IAuthenticationHelper auth)
         {
             _accountBO = accountBO;
+            _auth = auth;
         }
 
         [HttpPost]
         [Route("Register")]
-        public IActionResult Register(User user)
+        [AllowAnonymous]
+        public IActionResult Register(string firstName, string lastName, int age, string email, string password)
         {
             var result = new General_Result();
             try
             {
 
-                if (string.IsNullOrWhiteSpace(user.FirstName))
+                if (string.IsNullOrWhiteSpace(firstName))
                 {
                     result.HasError = true;
-                    result.ErrorsDictionary.Add("firstName", "Invisible First Name? works fine... just not here!");
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.FirstName), "Invisible First Name? works fine... just not here!");
                 }
-                if (string.IsNullOrWhiteSpace(user.LastName))
+                if (string.IsNullOrWhiteSpace(lastName))
                 {
                     result.HasError = true;
-                    result.ErrorsDictionary.Add("lastName", "Invisible Last Name? works fine... just not here!");
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.LastName), "Invisible Last Name? works fine... just not here!");
                 }
-                if (string.IsNullOrWhiteSpace(user.Email) || !user.Email.Contains("@") || !user.Email.Contains(".") || user.Email.Length < 5)
+                if (string.IsNullOrWhiteSpace(email) || !email.Contains("@") || !email.Contains(".") || email.Length < 5)
                 {
                     result.HasError = true;
-                    result.ErrorsDictionary.Add("email", "Invalid Email!");
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Invalid Email!");
                 }
-                if (user.Age < 12 || user.Age > 100)
+                if (age < 12 || age > 100)
                 {
                     result.HasError = true;
-                    result.ErrorsDictionary.Add("age", "You are a mummy or a child!");
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Age), "You are a mummy or a child!");
                 }
-                if (string.IsNullOrWhiteSpace(user.Password) || user.Password.Length < 5)
-                {
-                    var passwordIssues = "Invalid length";
-                    var passwordChars = user.Password.ToCharArray();
-                    int specialChars = 0;
-                    foreach (var c in passwordChars)
-                    {
-                        if (char.IsLetterOrDigit(c))
-                            specialChars++;
-                    }
 
-                    passwordIssues += specialChars == 0 ? "" : ", Need some special characters!";
 
+                if (string.IsNullOrWhiteSpace(password) || password.Length < 5 || !StaticHelpers.validateSpecialChars(password))
+                {
+                    var passwordIssues = "Password must be 5 minimum length with specials characters!";
                     result.HasError = true;
-                    result.ErrorsDictionary.Add("password", passwordIssues);
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
                 }
 
                 if (!result.HasError)
                 {
+                    var user = new User()
+                    {
+                        FirstName = firstName,
+                        LastName = lastName,
+                        Age = age,
+                        Email = email,
+                        Password = password
+                    };
                     var registeringStatus = _accountBO.RegisterUser(user);
                     if (!registeringStatus.IsSuccess)
                     {
                         result.HasError = true;
-                        result.ErrorsDictionary.Add("SavingError", registeringStatus.ErrorMessage);
+                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), registeringStatus.ErrorMessage);
                     }
                 }
                 return Ok(result);
@@ -73,17 +80,96 @@ namespace KaDiFi.Controllers
             catch (Exception)
             {
                 result.HasError = true;
-                result.ErrorsDictionary.Add("ServerError", "Sorry, An error Occured... Contact Admin for more help!");
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
                 return Ok(result);
             }
         }
+        [HttpPost]
+        [Route("GetAccess")]
+        [AllowAnonymous]
+        public IActionResult GetAccess(string email, string password)
+        {
+            var result = new General_ResultWithData();
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email) || !email.Contains("@") || !email.Contains(".") || email.Length < 5)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Wrong Email!");
+                }
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), "Wrong Password!");
+                }
+
+                if (result.HasError)
+                    return Ok(result);
+
+                var authentiateUserStatus = _accountBO.GetAccess(email, password);
+                if (!authentiateUserStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.AuthenticatingError.ToString(), authentiateUserStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+                result.Data = authentiateUserStatus.Data;
+            }
+            catch (Exception)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+            }
+
+            return Ok(result);
+        }
 
 
-        //public IActionResult GetAccess()
+        //[HttpPost]
+        //[Route("UpdateProfile")]
+        //[AllowAnonymous]
+        //public IActionResult UpdateAccount(string firstName, string lastName, int age, string email, string password)
+        //{
 
 
 
 
+        //}
+
+
+
+        //[HttpGet]
+        //[Route("GetAAA")]
+        ////[Authorize]
+
+        //public IActionResult AAA()
+        //{
+        //    var result = new General_Result();
+
+        //    try
+        //    {
+        //        var validateTokenStatus = _auth.ValidateToken(HttpContext.User);
+        //        if (!validateTokenStatus.IsSuccess)
+        //        {
+        //            result.HasError = true;
+        //            result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), validateTokenStatus.ErrorMessage);
+        //            return Ok(result);
+        //        }
+
+        //        return Ok("BlaBlaaaa");
+
+
+        //    }
+        //    catch (Exception)
+        //    {
+
+        //    }
+
+
+        //    return Ok();
+        //}
 
     }
 }

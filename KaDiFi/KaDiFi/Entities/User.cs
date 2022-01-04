@@ -4,6 +4,11 @@ namespace KaDiFi.Entities
 {
     public class User
     {
+
+        public User()
+        {
+        }
+
         public string Id { get; set; } // GUID
         [MinLength(1, ErrorMessage = "At least  1 Digit")]
         public string FirstName { get; set; }
@@ -15,7 +20,7 @@ namespace KaDiFi.Entities
         public string Email { get; set; }
         [MinLength(5, ErrorMessage = "At least 5 Digits")]
         public string Password { get; set; } // Hashed
-        public int RoleId { get; set; } // From Roles Enum
+        public int RoleId { get; set; } // UserRoles Enum
     }
 
 }
