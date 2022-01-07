@@ -27,6 +27,12 @@ namespace KaDiFi.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -35,6 +41,9 @@ namespace KaDiFi.Migrations
 
                     b.Property<string>("FriendlyName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Likes")
                         .HasColumnType("int");
@@ -51,11 +60,52 @@ namespace KaDiFi.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PublisherId");
 
                     b.ToTable("Media");
+                });
+
+            modelBuilder.Entity("KaDiFi.Entities.MediaComment", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Body")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CommenterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MediaId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("Time")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommenterId");
+
+                    b.HasIndex("MediaId");
+
+                    b.ToTable("MediaCommnet");
                 });
 
             modelBuilder.Entity("KaDiFi.Entities.MediaViews", b =>
@@ -89,13 +139,19 @@ namespace KaDiFi.Migrations
                     b.Property<int>("Age")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FirstName")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
-                    b.Property<string>("LastName")
+                    b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
@@ -103,6 +159,12 @@ namespace KaDiFi.Migrations
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("TermsFlag")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -114,6 +176,21 @@ namespace KaDiFi.Migrations
                     b.HasOne("KaDiFi.Entities.User", "Users")
                         .WithMany()
                         .HasForeignKey("PublisherId");
+
+                    b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("KaDiFi.Entities.MediaComment", b =>
+                {
+                    b.HasOne("KaDiFi.Entities.User", "Users")
+                        .WithMany()
+                        .HasForeignKey("CommenterId");
+
+                    b.HasOne("KaDiFi.Entities.Media", "Medias")
+                        .WithMany()
+                        .HasForeignKey("MediaId");
+
+                    b.Navigation("Medias");
 
                     b.Navigation("Users");
                 });

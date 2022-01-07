@@ -45,8 +45,8 @@
         Series = 0,
         Cartoons = 1,
         Movies = 2,
-        Sports,
-        Songs,
+        Sports = 3,
+        Songs = 4,
 
     }
     public enum PeriodTypes

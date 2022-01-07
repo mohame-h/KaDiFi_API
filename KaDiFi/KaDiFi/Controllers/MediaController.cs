@@ -76,8 +76,6 @@ namespace KaDiFi.Controllers
                 }
 
 
-
-
             }
             catch (Exception ex)
             {
@@ -150,6 +148,49 @@ namespace KaDiFi.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Route("AddComment")]
+        public IActionResult AddComment(MediaCommentDTO model)
+        {
+
+            var result = new General_ResultWithData();
+
+            try
+            {
+                var mediaExistance = _mediaBO.GetSpecificMedia(model.mediaId);
+                if (!mediaExistance.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.AuthenticatingError.ToString(), mediaExistance.ErrorMessage);
+                    return Ok(result);
+                }
+
+                //TODO: model.userId = UserId from token
+
+                if (!result.HasError)
+                {
+                    var AddCommentStatus = _mediaBO.AddComment(model);
+                    if (!AddCommentStatus.IsSuccess)
+                    {
+                        result.HasError = true;
+                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), AddCommentStatus.ErrorMessage);
+                    }
+                    else
+                    {
+                        result.Data = AddCommentStatus.Data;
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+
+            return Ok(result);
+        }
 
     }
 }

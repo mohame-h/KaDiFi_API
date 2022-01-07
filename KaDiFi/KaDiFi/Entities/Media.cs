@@ -2,7 +2,7 @@
 
 namespace KaDiFi.Entities
 {
-    public class Media
+    public class Media : BaseEntity
     {
 
         public Media()
@@ -36,6 +36,13 @@ namespace KaDiFi.Entities
         public string Id { get; set; }
         public string Name { get; set; }
         public string Source { get; set; }
+    }
+    [NotMapped]
+    public class MediaCommentDTO
+    {
+        public string mediaId { get; set; }
+        public string UserId { get; set; }
+        public string commentBody { get; set; }
     }
 
 

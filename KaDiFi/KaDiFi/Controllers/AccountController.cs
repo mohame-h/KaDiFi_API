@@ -23,50 +23,49 @@ namespace KaDiFi.Controllers
         [HttpPost]
         [Route("Register")]
         [AllowAnonymous]
-        public IActionResult Register(string firstName, string lastName, int age, string email, string password)
+        public IActionResult Register([FromBody] UserParams userParams)
         {
             var result = new General_Result();
             try
             {
 
-                if (string.IsNullOrWhiteSpace(firstName))
+                if (string.IsNullOrWhiteSpace(userParams.name))
                 {
                     result.HasError = true;
-                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.FirstName), "Invisible First Name? works fine... just not here!");
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.FirstName), "Invisible Name? works fine... just not here!");
                 }
-                if (string.IsNullOrWhiteSpace(lastName))
-                {
-                    result.HasError = true;
-                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.LastName), "Invisible Last Name? works fine... just not here!");
-                }
-                if (string.IsNullOrWhiteSpace(email) || !email.Contains("@") || !email.Contains(".") || email.Length < 5)
+                if (string.IsNullOrWhiteSpace(userParams.email) || !userParams.email.Contains("@") || !userParams.email.Contains(".") || userParams.email.Length < 5)
                 {
                     result.HasError = true;
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Invalid Email!");
                 }
-                if (age < 12 || age > 100)
+                if (userParams.age < 12 || userParams.age > 100)
                 {
                     result.HasError = true;
-                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Age), "You are a mummy or a child!");
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Age), "Invalid Age!");
                 }
-
-
-                if (string.IsNullOrWhiteSpace(password) || password.Length < 5 || !StaticHelpers.validateSpecialChars(password))
+                if (string.IsNullOrWhiteSpace(userParams.password) || userParams.password.Length < 5 || !StaticHelpers.validateSpecialChars(userParams.password))
                 {
                     var passwordIssues = "Password must be 5 minimum length with specials characters!";
                     result.HasError = true;
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
+                }
+                var accountExistance = _accountBO.GetUserBy(userParams.email);
+                if (accountExistance.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Account with same email exists, Sign in instead?");
                 }
 
                 if (!result.HasError)
                 {
                     var user = new User()
                     {
-                        FirstName = firstName,
-                        LastName = lastName,
-                        Age = age,
-                        Email = email,
-                        Password = password
+                        Name = userParams.name,
+                        Age = userParams.age,
+                        Email = userParams.email,
+                        Password = userParams.password,
+                        TermsFlag = userParams.acceptTerms
                     };
                     var registeringStatus = _accountBO.RegisterUser(user);
                     if (!registeringStatus.IsSuccess)
@@ -125,6 +124,119 @@ namespace KaDiFi.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost]
+        [Route("ChangePassword")]
+        [AllowAnonymous]
+        public IActionResult ChangePassword([FromBody] ChangePasswordDTO model)
+        {
+            var result = new General_Result();
+            try
+            {
+                var existingUser = _accountBO.GetUserBy("email from token", model.oldPassword);
+                if (!existingUser.IsSuccess)
+                {
+                    var passwordIssues = "Invalid Old Password!";
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
+                }
+                if (string.IsNullOrWhiteSpace(model.newPassword) || model.newPassword.Length < 5 || !StaticHelpers.validateSpecialChars(model.newPassword))
+                {
+                    var passwordIssues = "Password must be 5 minimum length with specials characters!";
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
+                }
+
+                if (!result.HasError)
+                {
+                    var changePasswordStatus = _accountBO.ChangeUserPassword("email from token", model.newPassword);
+                    if (!changePasswordStatus.IsSuccess)
+                    {
+                        result.HasError = true;
+                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), changePasswordStatus.ErrorMessage);
+                    }
+                }
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+        }
+
+
+        [HttpPost]
+        [Route("DisableNews")]
+        [AllowAnonymous]
+        public IActionResult DisableNews()
+        {
+            var result = new General_Result();
+            try
+            {
+                var userExistance = _accountBO.GetUserBy("email from token");
+                if (!userExistance.IsSuccess)
+                {
+                    var passwordIssues = "Inconsistant Credintials!";
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), passwordIssues);
+                }
+
+                if (!result.HasError)
+                {
+                    var disableNewsStatus = _accountBO.DisableNews("email from token");
+                    if (!disableNewsStatus.IsSuccess)
+                    {
+                        result.HasError = true;
+                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), disableNewsStatus.ErrorMessage);
+                    }
+                }
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+        }
+
+        [HttpPost]
+        [Route("DisableAccount")]
+        [AllowAnonymous]
+        public IActionResult DisableAccount([FromBody] string password)
+        {
+            var result = new General_Result();
+            try
+            {
+                var userExistance = _accountBO.GetUserBy("email from token", password);
+                if (!userExistance.IsSuccess)
+                {
+                    var passwordIssues = "Inconsistant Credintials!";
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
+                }
+
+                if (!result.HasError)
+                {
+                    var disableAccountStatus = _accountBO.DisableAccount("email from token");
+                    if (!disableAccountStatus.IsSuccess)
+                    {
+                        result.HasError = true;
+                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), disableAccountStatus.ErrorMessage);
+                    }
+                }
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+        }
+
 
 
         //[HttpPost]

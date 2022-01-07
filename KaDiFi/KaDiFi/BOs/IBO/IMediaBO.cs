@@ -17,6 +17,6 @@ namespace KaDiFi.BOs.IBO
 
         string GetMediaDirectoryPath(int mediaCategory);
 
-
+        General_StatusWithData AddComment(MediaCommentDTO model);
     }
 }

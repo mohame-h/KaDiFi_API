@@ -200,5 +200,45 @@ namespace KaDiFi.BOs
 
             return path;
         }
+
+        public General_StatusWithData AddComment(MediaCommentDTO model)
+        {
+            var result = new General_StatusWithData();
+            try
+            {
+                var newComment = new MediaComment();
+                newComment.Id = Guid.NewGuid().ToString();
+                newComment.CommenterId = model.UserId;
+                newComment.MediaId = model.mediaId;
+                newComment.Body = model.commentBody;
+                newComment.CreatedAt = DateTime.Now;
+                _db.MediaCommnet.Add(newComment);
+                _db.SaveChanges();
+
+                var comments = (
+                            from tblcomment in _db.MediaCommnet.Where(z => z.MediaId == model.mediaId && z.IsActive)
+                            join tbluser in _db.User
+                            on tblcomment.CommenterId equals tbluser.Id
+                            select new
+                            {
+                                userName = tbluser.IsActive ? tbluser.Name : "",
+                                commentBody = tbluser.IsActive ? tblcomment.Body : "",
+                                commentDate = tblcomment.UpdatedAt == null ? tblcomment.CreatedAt : tblcomment.UpdatedAt,
+                                isCurrenctUser = tbluser.Id == model.UserId ? true : false,
+                                isActiveUser = tbluser.IsActive
+                            })
+                            .OrderByDescending(z => z.commentDate)
+                            .ToList();
+
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "Temp Server Error.";
+            }
+
+            return result;
+        }
+
     }
 }

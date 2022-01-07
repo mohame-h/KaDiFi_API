@@ -48,15 +48,30 @@ namespace KaDiFi
 
             services.AddCors(options =>
             {
-                options.AddPolicy(MyAllowSpecificOrigins,
-                builder =>
+                options.AddPolicy("BlaBla", policy =>
                 {
-                    builder.AllowAnyOrigin();
-                    builder.AllowAnyMethod();
-                    builder.AllowAnyHeader();
+                    policy.AllowAnyOrigin();
+                    policy.AllowAnyMethod();
+                    policy.AllowAnyHeader();
                 });
+                //options.AddPolicy(MyAllowSpecificOrigins,
+                //builder =>
+                //{
+                //    builder.AllowAnyOrigin();
+                //    builder.AllowAnyMethod();
+                //    builder.AllowAnyHeader();
+                //    builder.SetIsOriginAllowed(x => true);
+                //    builder.AllowCredentials();
+                //});
 
             });
+            //services.AddCors(options =>
+            //{
+            //    options.AddPolicy("CorsPolicy",
+            //        builder => builder.AllowAnyOrigin()
+            //            .AllowAnyMethod()
+            //            .AllowAnyHeader());
+            //});
 
             services.AddDbContext<KaDifiEntities>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
@@ -122,14 +137,9 @@ namespace KaDiFi
             });
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
             services.AddScoped<IAccountBO, AccountBO>();
             services.AddScoped<IMediaBO, MediaBO>();
-
-
             services.AddScoped<IAuthenticationHelper, AuthenticationHelper>();
-
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -142,7 +152,17 @@ namespace KaDiFi
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "KaDiFi v1"));
             }
 
-            app.UseHttpsRedirection();
+            //app.Use(async (context, next) =>
+            //{
+            //    // Add Header
+            //    context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+
+            //    // Call next middleware
+            //    await next.Invoke();
+            //});
+            app.UseCors("BlaBla");
+
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
 
