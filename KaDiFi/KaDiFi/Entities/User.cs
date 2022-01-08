@@ -18,27 +18,7 @@ namespace KaDiFi.Entities
         public int RoleId { get; set; } // UserRoles Enum
         public bool TermsFlag { get; set; } // Default is true
     }
-    [NotMapped]
-    public class UserParams
-    {
-        [MinLength(3, ErrorMessage = "At least 3 Digit")]
-        public string name { get; set; }
-        [Range(12, 100, ErrorMessage = "Invalid Age")]
-        public int age { get; set; }
-        [MinLength(5, ErrorMessage = "Invalid Email")]
-        public string email { get; set; }
-        [MinLength(5, ErrorMessage = "At least 5 Digits")]
-        public string password { get; set; } // Hashed
-        [DefaultValue(true)]
-        public bool acceptTerms { get; set; }
-    }
-    [NotMapped]
-    public class ChangePasswordDTO
-    {
-        [MinLength(5, ErrorMessage = "At least 5 Digits")]
-        public string oldPassword { get; set; }
-        [MinLength(5, ErrorMessage = "At least 5 Digits")]
-        public string newPassword { get; set; }
-    }
+  
+  
 
 }

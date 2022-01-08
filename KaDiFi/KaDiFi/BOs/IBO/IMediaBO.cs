@@ -7,7 +7,17 @@ namespace KaDiFi.BOs.IBO
         General_Status CreateMedia(Media mediaObj);
 
         General_StatusWithData GetHomeMedia();
-        General_StatusWithData GetSpecificMedia(string mediaId);
+        General_StatusWithData GetSpecificMedia(string mediaId, string userEmail, int commentsCount, int repliesCount);
+
+
+
+
+
+
+
+
+
+
         General_StatusWithData GetCategoryMedia(int mediaCategory, int periodType);
         General_StatusWithData SearchMedia(string mediaName);
 

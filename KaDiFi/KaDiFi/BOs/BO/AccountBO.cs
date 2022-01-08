@@ -26,26 +26,21 @@ namespace KaDiFi.BOs
                 try
                 {
                     var oldUserRegisterData = _db.User.Where(z => z.Email == newUser.Email && !z.IsActive).ToList();
-                    var oldUserIds = oldUserRegisterData.Select(z => z.Id).ToList();
-                    var oldUserActivations = _db.AccountActivation.Where(z => oldUserIds.Contains(z.UserId)).ToList();
                     if (oldUserRegisterData.Count > 0)
                     {
-                        //_db.User.RemoveRange(oldUserRegisterData);
+                        var oldUserIds = oldUserRegisterData.Select(z => z.Id).ToList();
+                        var oldUserActivations = _db.AccountVerification.Where(z => oldUserIds.Contains(z.UserId)).ToList();
                         oldUserRegisterData.ForEach(z =>
                         {
                             z.IsActive = false;
                             z.DeletedAt = DateTime.Now;
                         });
-                        if (oldUserActivations.Count > 0)
+
+                        oldUserActivations.ForEach(z =>
                         {
-                            //_db.AccountActivation.RemoveRange(oldUserActivations);
-                            oldUserActivations.ForEach(z =>
-                            {
-                                z.IsActive = false;
-                                z.DeletedAt = DateTime.Now;
-                            });
-                        }
-                        _db.SaveChanges();
+                            z.IsActive = false;
+                            z.DeletedAt = DateTime.Now;
+                        });
                     }
 
                     newUser.Id = Guid.NewGuid().ToString();
@@ -55,17 +50,23 @@ namespace KaDiFi.BOs
                     newUser.IsActive = false;
                     _db.User.Add(newUser);
 
-                    var activationObj = new AccountActivation();
-                    activationObj.Id = Guid.NewGuid().ToString();
-                    activationObj.Code = Guid.NewGuid().ToString();
-                    activationObj.CreatedAt = DateTime.Now;
-                    activationObj.UserId = newUser.Id;
-                    _db.AccountActivation.Add(activationObj);
-                    //TODO: Send Email staff;
+                    var verificationObj = new AccountVerification();
+                    verificationObj .Id = Guid.NewGuid().ToString();
+                    verificationObj .Code = Guid.NewGuid().ToString();
+                    verificationObj .CreatedAt = DateTime.Now;
+                    verificationObj.UserId = newUser.Id;
+                    _db.AccountVerification.Add(verificationObj);
 
                     _db.SaveChanges();
-                    transaction.Commit();
 
+                    //TODO: Send Email staff;
+                    var sendMailStatus = StaticHelpers.sendEmail(newUser.Email, "Account Verification", verificationObj.Code);
+                    if (!sendMailStatus)
+                    {
+                        throw new Exception();
+                    }
+
+                    transaction.Commit();
                 }
                 catch (Exception ex)
                 {
@@ -77,97 +78,31 @@ namespace KaDiFi.BOs
 
             return result;
         }
-        public General_StatusWithData GetAccess(string email, string password)
+        public General_Status VerifyAccount(string verificationCode)
         {
-            var result = new General_StatusWithData();
-
-            try
+            var result = new General_Status();
+            using (var transaction = _db.Database.BeginTransaction())
             {
-                var loginUser = _db.User.FirstOrDefault(z => z.Email == email && z.IsActive);
-                if (loginUser == null)
+                try
                 {
+                    var verificationObj = _db.AccountVerification.FirstOrDefault(z => z.IsActive && z.Code == verificationCode && z.DeletedAt == null);
+                    verificationObj.IsActive = false;
+                    verificationObj.DeletedAt= DateTime.Now;
+
+                    var userObj = _db.User.FirstOrDefault(z => z.Id == verificationObj.UserId);
+                    userObj.IsActive = true;
+                    userObj.UpdatedAt = DateTime.Now;
+
+                    _db.SaveChanges();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
                     result.IsSuccess = false;
-                    result.ErrorMessage = "Wrong Email!";
-                    return result;
+                    result.ErrorMessage = "Temp Server Error.";
                 }
-                else if (loginUser.Password != password)
-                {
-                    result.IsSuccess = false;
-                    result.ErrorMessage = "Invalid Credintials!";
-                    return result;
-                }
-
-                var token = _auth.GenerateJSONWebToken(email);
-                if (string.IsNullOrWhiteSpace(token))
-                {
-                    result.ErrorMessage = General_Strings.APIIssueMessage;
-                    return result;
-                }
-
-                result.Data = token;
             }
-            catch (Exception ex)
-            {
-                result.IsSuccess = false;
-                result.ErrorMessage = General_Strings.APIIssueMessage;
-            }
-
-            return result;
-        }
-        public General_StatusWithData GetUserBy(string email)
-        {
-            var result = new General_StatusWithData();
-            try
-            {
-                var user = _db.User.FirstOrDefault(z => z.Email == email && z.IsActive);
-                if (user == null)
-                {
-                    result.IsSuccess = false;
-                    result.ErrorMessage = "No account with such Email exists!";
-                    return result;
-                }
-
-                result.IsSuccess = true;
-                result.Data = user;
-
-            }
-            catch (Exception ex)
-            {
-                result.IsSuccess = false;
-                result.ErrorMessage = "Temp Server Error.";
-            }
-
-            return result;
-        }
-        public General_StatusWithData GetUserBy(string email, string password)
-        {
-            var result = new General_StatusWithData();
-            try
-            {
-                var user = _db.User.FirstOrDefault(z => z.Email == email && z.IsActive);
-                if (user == null)
-                {
-                    result.IsSuccess = false;
-                    result.ErrorMessage = "No account with such Email exists!";
-                    return result;
-                }
-                if (user.Password != password)
-                {
-                    result.IsSuccess = false;
-                    result.ErrorMessage = "Invalid Credintials!";
-                    return result;
-                }
-
-                result.IsSuccess = true;
-                result.Data = user;
-
-            }
-            catch (Exception ex)
-            {
-                result.IsSuccess = false;
-                result.ErrorMessage = "Temp Server Error.";
-            }
-
             return result;
         }
 
@@ -191,6 +126,67 @@ namespace KaDiFi.BOs
             return result;
         }
 
+        public General_Status DisableAccount(string email, int freezingDaysCount)
+        {
+            var result = new General_Status();
+            using (var transaction = _db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var user = _db.User.FirstOrDefault(z => z.Email == email && z.IsActive);
+                    user.IsActive = false;
+                    user.DeletedAt = DateTime.Now;
+
+                    var deactivationObj = new AccountDeactivation();
+                    deactivationObj.Id = Guid.NewGuid().ToString();
+                    deactivationObj.UserId = user.Id;
+                    deactivationObj.CreatedAt = DateTime.Now;
+                    deactivationObj.Until = DateTime.Now.AddDays(freezingDaysCount);
+                    _db.AccountDeactivation.Add(deactivationObj);
+
+                    _db.SaveChanges();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    result.IsSuccess = false;
+                    result.ErrorMessage = "Temp Server Error.";
+                }
+            }
+            return result;
+        }
+
+        public General_StatusWithData GetAccess(string email, string password)
+        {
+            var result = new General_StatusWithData();
+
+            try
+            {
+                var loginUser = _db.User.FirstOrDefault(z => z.Email == email && z.Password == password && z.IsActive);
+                if (loginUser == null)
+                {
+                    result.ErrorMessage = "Invalid Credintials!";
+                    return result;
+                }
+
+                var token = _auth.GenerateJSONWebToken(email);
+                if (string.IsNullOrWhiteSpace(token))
+                    throw new Exception();
+
+                result.Data = new AccessResult() { UserName = loginUser.Name, Token = token };
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = General_Strings.APIIssueMessage;
+            }
+
+            return result;
+        }
+
+
+
         public General_Status DisableNews(string email)
         {
             var result = new General_Status();
@@ -210,26 +206,6 @@ namespace KaDiFi.BOs
 
             return result;
         }
-        public General_Status DisableAccount(string email)
-        {
-            var result = new General_Status();
-            try
-            {
-                var user = _db.User.FirstOrDefault(z => z.Email == email && z.IsActive);
-                user.IsActive = false;
-                user.DeletedAt = DateTime.Now;
-
-                _db.SaveChanges();
-            }
-            catch (Exception ex)
-            {
-                result.IsSuccess = false;
-                result.ErrorMessage = "Temp Server Error.";
-            }
-
-            return result;
-        }
-
         public General_StatusWithData ActivateAccount(string activationCode)
         {
             var result = new General_StatusWithData();
@@ -237,7 +213,7 @@ namespace KaDiFi.BOs
             {
                 using (var transaction = _db.Database.BeginTransaction())
                 {
-                    var activationObj = _db.AccountActivation.FirstOrDefault(z => z.Code == activationCode && z.IsActive && z.DeletedAt == null);
+                    var activationObj = _db.AccountVerification.FirstOrDefault(z => z.Code == activationCode && z.IsActive && z.DeletedAt == null);
                     if (activationObj == null)
                     {
                         result.IsSuccess = false;
@@ -260,61 +236,66 @@ namespace KaDiFi.BOs
 
         }
 
-        //public General_Status RegisterUser(User newUser)
-        //{
-        //    var result = new General_Status();
-        //    try
-        //    {
-        //        newUser.Id = Guid.NewGuid().ToString();
-        //        newUser.Password = newUser.Password.Mask();
-        //        newUser.RoleId = (int)UserRoles.User;
-        //        _db.User.Add(newUser);
-        //        _db.SaveChanges();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        result.IsSuccess = false;
-        //        result.ErrorMessage = "Temp Server Error.";
-        //    }
-
-        //    return result;
-        //}
-        //public General_StatusWithData GetAccess(string email, string password)
-        //{
-        //    var result = new General_StatusWithData();
-
-        //    try
-        //    {
-        //        var loginUser = _db.User.FirstOrDefault(z => z.Email == email);
-        //        //var userExist = _db.User.Any(z => z.Email == email && z.Password == password);
-        //        if (loginUser == null)
-        //            result.ErrorMessage = "Invalid User Credintials!";
-
-        //        var passwordUnmasked = loginUser.Password.UnMask();
-        //        if (passwordUnmasked != password)
-        //            result.ErrorMessage = "Invalid User Credintials!";
-
-        //        var token = _auth.GenerateJSONWebToken(email);
-        //        if (string.IsNullOrWhiteSpace(token))
-        //        {
-        //            result.ErrorMessage = General_Strings.APIIssueMessage;
-        //            return result;
-        //        }
-
-        //        result.Data = token;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        result.IsSuccess = false;
-        //        result.ErrorMessage = General_Strings.APIIssueMessage;
-        //    }
-
-        //    return result;
-        //}
 
 
 
+        #region GetBy region
+        public General_StatusWithData GetAccountVerificationBy(string verificationCode)
+        {
+            var result = new General_StatusWithData();
 
+            try
+            {
+                var verificationObj = _db.AccountVerification.FirstOrDefault(z => z.IsActive && z.Code == verificationCode && z.DeletedAt == null);
+                if (verificationObj != null)
+                result.Data = verificationObj;
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = General_Strings.APIIssueMessage;
+            }
+
+            return result;
+        }
+        public General_StatusWithData GetUserBy(string email)
+        {
+            var result = new General_StatusWithData();
+            try
+            {
+                var user = _db.User.FirstOrDefault(z => z.Email == email && z.IsActive);
+                if (user != null)
+                    result.Data = user;
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "Temp Server Error.";
+            }
+
+            return result;
+        }
+        public General_StatusWithData GetUserBy(string email, string password)
+        {
+            var result = new General_StatusWithData();
+            try
+            {
+                var user = _db.User.FirstOrDefault(z => z.Email == email && z.Password == password && z.IsActive);
+                if (user != null)
+                result.Data = user;
+                
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "Temp Server Error.";
+            }
+
+            return result;
+        }
+       
+
+        #endregion
 
 
     }

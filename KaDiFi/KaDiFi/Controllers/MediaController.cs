@@ -21,73 +21,6 @@ namespace KaDiFi.Controllers
             _auth = auth;
         }
 
-        [HttpPost]
-        [Route("AddMedia")]
-        public async Task<IActionResult> AddMediaAsync(int mediaType, int mediaCategory, string mediaDescription)
-        {
-
-            var result = new General_Result();
-
-            try
-            {
-                if (Request.Form.Files.Count > 0)
-                {
-                    var mediaDirectoryPath = _mediaBO.GetMediaDirectoryPath(mediaType);
-                    var folderExistance = Directory.Exists(mediaDirectoryPath);
-                    if (!folderExistance)
-                        System.IO.Directory.CreateDirectory(mediaDirectoryPath);
-
-                    for (int i = 0; i < Request.Form.Files.Count; i++)
-                    {
-                        var mediaobj = new Media();
-                        mediaobj.Id = Guid.NewGuid().ToString();
-                        mediaobj.CategoryId = mediaCategory;
-                        mediaobj.Description = mediaDescription;
-
-                        mediaobj.FriendlyName = Request.Form.Files[i].FileName;
-                        string mediaExtension = Path.GetExtension(Request.Form.Files[i].FileName);
-                        mediaobj.MediaName = string.Join(string.Empty, (string.Join("_", mediaobj.Id, mediaobj.CategoryId)), mediaExtension);
-                        mediaobj.SourcePath = Path.Combine(mediaDirectoryPath, mediaobj.MediaName.Replace(" ", ""));
-
-                        mediaobj.PublisherId = "00000000-0000-0000-0000-000000000000"; //TODO: From Token
-                        mediaobj.Type = mediaType;
-
-                        var mediaCreationStatus = _mediaBO.CreateMedia(mediaobj);
-                        if (!mediaCreationStatus.IsSuccess)
-                        {
-                            result.HasError = true;
-                            result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), mediaCreationStatus.ErrorMessage);
-                            return Ok(result);
-                        }
-
-                        //Request.Form.Files[i].SaveAs(Server.mappath(filepath + "/" + filename.replace(" ", ""))); //file will be saved in path
-
-                        using (var inputStream = new FileStream(mediaobj.SourcePath, FileMode.Create))
-                        {
-                            await Request.Form.Files[i].CopyToAsync(inputStream);
-                            // stream to byte array
-                            byte[] array = new byte[inputStream.Length];
-                            inputStream.Seek(0, SeekOrigin.Begin);
-                            inputStream.Read(array, 0, array.Length);
-
-                            string fName = Request.Form.Files[i].FileName;
-                        }
-                    }
-                }
-
-
-            }
-            catch (Exception ex)
-            {
-                result.HasError = true;
-                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
-                return Ok(result);
-            }
-
-            return Ok(result);
-        }
-
-
         [HttpGet]
         [Route("HomeData")]
         public IActionResult GetHomeData()
@@ -119,23 +52,24 @@ namespace KaDiFi.Controllers
         }
 
         [HttpGet]
-        [Route("MediaCategory")]
-        public IActionResult GetSpecificMediaCategory(int mediaCategory, int periodType)
+        [Route("GetSpecificMedia")]
+        public IActionResult GetSpecificMedia([FromBody]GetMediaDTO model)
         {
 
             var result = new General_ResultWithData();
 
             try
             {
-                var categoryMedia = _mediaBO.GetCategoryMedia(mediaCategory, periodType);
-                if (!categoryMedia.IsSuccess)
+                //TODO: Get user credintials
+                var specificMediaStatus= _mediaBO.GetSpecificMedia(model.mediaId, model.commentsTotalCount, model.repliesTotalCount, "email from token");
+                if (!specificMediaStatus.IsSuccess || (specificMediaStatus.IsSuccess && specificMediaStatus.Data == null))
                 {
                     result.HasError = true;
-                    result.ErrorsDictionary.Add(ErrorKeyTypes.AuthenticatingError.ToString(), categoryMedia.ErrorMessage);
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.AuthenticatingError.ToString(), specificMediaStatus.ErrorMessage);
                     return Ok(result);
                 }
 
-                result.Data = categoryMedia.Data;
+                result.Data = specificMediaStatus.Data;
 
             }
             catch (Exception ex)
@@ -148,49 +82,165 @@ namespace KaDiFi.Controllers
             return Ok(result);
         }
 
-        [HttpPost]
-        [Route("AddComment")]
-        public IActionResult AddComment(MediaCommentDTO model)
-        {
 
-            var result = new General_ResultWithData();
 
-            try
-            {
-                var mediaExistance = _mediaBO.GetSpecificMedia(model.mediaId);
-                if (!mediaExistance.IsSuccess)
-                {
-                    result.HasError = true;
-                    result.ErrorsDictionary.Add(ErrorKeyTypes.AuthenticatingError.ToString(), mediaExistance.ErrorMessage);
-                    return Ok(result);
-                }
 
-                //TODO: model.userId = UserId from token
 
-                if (!result.HasError)
-                {
-                    var AddCommentStatus = _mediaBO.AddComment(model);
-                    if (!AddCommentStatus.IsSuccess)
-                    {
-                        result.HasError = true;
-                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), AddCommentStatus.ErrorMessage);
-                    }
-                    else
-                    {
-                        result.Data = AddCommentStatus.Data;
-                    }
-                }
 
-            }
-            catch (Exception ex)
-            {
-                result.HasError = true;
-                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
-                return Ok(result);
-            }
 
-            return Ok(result);
-        }
+
+
+
+
+
+        //[HttpGet]
+        //[Route("MediaCategory")]
+        //public IActionResult GetSpecificMediaCategory(int mediaCategory, int periodType)
+        //{
+
+        //    var result = new General_ResultWithData();
+
+        //    try
+        //    {
+        //        var categoryMedia = _mediaBO.GetCategoryMedia(mediaCategory, periodType);
+        //        if (!categoryMedia.IsSuccess)
+        //        {
+        //            result.HasError = true;
+        //            result.ErrorsDictionary.Add(ErrorKeyTypes.AuthenticatingError.ToString(), categoryMedia.ErrorMessage);
+        //            return Ok(result);
+        //        }
+
+        //        result.Data = categoryMedia.Data;
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        result.HasError = true;
+        //        result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+        //        return Ok(result);
+        //    }
+
+        //    return Ok(result);
+        //}
+
+
+
+
+
+
+
+        //[HttpPost]
+        //[Route("AddComment")]
+        //public IActionResult AddComment(MediaCommentDTO model)
+        //{
+
+        //    var result = new General_ResultWithData();
+
+        //    try
+        //    {
+        //        var mediaExistance = _mediaBO.GetSpecificMedia(model.mediaId);
+        //        if (!mediaExistance.IsSuccess)
+        //        {
+        //            result.HasError = true;
+        //            result.ErrorsDictionary.Add(ErrorKeyTypes.AuthenticatingError.ToString(), mediaExistance.ErrorMessage);
+        //            return Ok(result);
+        //        }
+
+        //        //TODO: model.userId = UserId from token
+
+        //        if (!result.HasError)
+        //        {
+        //            var AddCommentStatus = _mediaBO.AddComment(model);
+        //            if (!AddCommentStatus.IsSuccess)
+        //            {
+        //                result.HasError = true;
+        //                result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), AddCommentStatus.ErrorMessage);
+        //            }
+        //            else
+        //            {
+        //                result.Data = AddCommentStatus.Data;
+        //            }
+        //        }
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        result.HasError = true;
+        //        result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+        //        return Ok(result);
+        //    }
+
+        //    return Ok(result);
+        //}
+
+
+        //[HttpPost]
+        //[Route("AddMedia")]
+        //public async Task<IActionResult> AddMediaAsync(int mediaType, int mediaCategory, string mediaDescription)
+        //{
+
+        //    var result = new General_Result();
+
+        //    try
+        //    {
+        //        if (Request.Form.Files.Count > 0)
+        //        {
+        //            var mediaDirectoryPath = _mediaBO.GetMediaDirectoryPath(mediaType);
+        //            var folderExistance = Directory.Exists(mediaDirectoryPath);
+        //            if (!folderExistance)
+        //                System.IO.Directory.CreateDirectory(mediaDirectoryPath);
+
+        //            for (int i = 0; i < Request.Form.Files.Count; i++)
+        //            {
+        //                var mediaobj = new Media();
+        //                mediaobj.Id = Guid.NewGuid().ToString();
+        //                mediaobj.CategoryId = mediaCategory;
+        //                mediaobj.Description = mediaDescription;
+
+        //                mediaobj.FriendlyName = Request.Form.Files[i].FileName;
+        //                string mediaExtension = Path.GetExtension(Request.Form.Files[i].FileName);
+        //                mediaobj.MediaName = string.Join(string.Empty, (string.Join("_", mediaobj.Id, mediaobj.CategoryId)), mediaExtension);
+        //                mediaobj.SourcePath = Path.Combine(mediaDirectoryPath, mediaobj.MediaName.Replace(" ", ""));
+
+        //                mediaobj.PublisherId = "00000000-0000-0000-0000-000000000000"; //TODO: From Token
+        //                mediaobj.Type = mediaType;
+
+        //                var mediaCreationStatus = _mediaBO.CreateMedia(mediaobj);
+        //                if (!mediaCreationStatus.IsSuccess)
+        //                {
+        //                    result.HasError = true;
+        //                    result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), mediaCreationStatus.ErrorMessage);
+        //                    return Ok(result);
+        //                }
+
+        //                //Request.Form.Files[i].SaveAs(Server.mappath(filepath + "/" + filename.replace(" ", ""))); //file will be saved in path
+
+        //                using (var inputStream = new FileStream(mediaobj.SourcePath, FileMode.Create))
+        //                {
+        //                    await Request.Form.Files[i].CopyToAsync(inputStream);
+        //                    // stream to byte array
+        //                    byte[] array = new byte[inputStream.Length];
+        //                    inputStream.Seek(0, SeekOrigin.Begin);
+        //                    inputStream.Read(array, 0, array.Length);
+
+        //                    string fName = Request.Form.Files[i].FileName;
+        //                }
+        //            }
+        //        }
+
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        result.HasError = true;
+        //        result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+        //        return Ok(result);
+        //    }
+
+        //    return Ok(result);
+        //}
+
+
 
     }
 }

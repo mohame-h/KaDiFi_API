@@ -3,12 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KaDiFi.Entities
 {
-    public class MediaViews
+    public class MediaViews: BaseEntity
     {
         public string Id { get; set; } // GUID
         public string MediaId { get; set; }
         public string UserId { get; set; }
-        public DateTime ViewTime { get; set; }
+
+        public int? React { get; set; } // MediaReactTypes
+
 
         [ForeignKey("MediaId")]
         public Media Media { get; set; }
@@ -16,5 +18,6 @@ namespace KaDiFi.Entities
         [ForeignKey("UserId")]
         public User User { get; set; }
     }
+
 
 }

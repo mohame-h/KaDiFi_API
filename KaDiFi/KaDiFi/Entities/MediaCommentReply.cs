@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KaDiFi.Entities
 {
-    public class MediaComment : BaseEntity
+    public class MediaCommentReply : BaseEntity
     {
         public string Id { get; set; } // GUID
 
@@ -14,9 +14,9 @@ namespace KaDiFi.Entities
         [ForeignKey("CommenterId")]
         public User Users { get; set; }
 
-        public string MediaId { get; set; }
-        [ForeignKey("MediaId")]
-        public Media Medias { get; set; }
+        public string CommentId { get; set; }
+        [ForeignKey("CommentId")]
+        public MediaComment Comments{ get; set; }
     }
 
 

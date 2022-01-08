@@ -4,46 +4,25 @@ namespace KaDiFi.Entities
 {
     public class Media : BaseEntity
     {
-
-        public Media()
-        {
-            Likes = 0;
-            DisLikes = 0;
-            //ViewsCount = 0;
-        }
-
         public string Id { get; set; } // GUID
-        public string FriendlyName { get; set; }
-        public string MediaName { get; set; }
+
+        public string Title { get; set; }
+        public string Name { get; set; }
+
+        public string CoverSource { get; set; }
+        public string Source { get; set; }
+
+        public string Description { get; set; }
 
         public int Type { get; set; } // MediaTypes Enum
-        public string PublisherId { get; set; } // UserId
-        public string SourcePath { get; set; }
-        public string Description { get; set; }
         public int CategoryId { get; set; } // MediaCategories Enum
 
-        public int Likes { get; set; }
-        public int DisLikes { get; set; }
-        //public int ViewsCount { get; set; }
+        public string PublisherId { get; set; } // UserId
 
 
         [ForeignKey("PublisherId")]
         public User Users { get; set; }
     }
-    [NotMapped]
-    public class MediaResult
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string Source { get; set; }
-    }
-    [NotMapped]
-    public class MediaCommentDTO
-    {
-        public string mediaId { get; set; }
-        public string UserId { get; set; }
-        public string commentBody { get; set; }
-    }
-
+   
 
 }

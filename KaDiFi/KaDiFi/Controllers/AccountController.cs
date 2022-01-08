@@ -23,7 +23,7 @@ namespace KaDiFi.Controllers
         [HttpPost]
         [Route("Register")]
         [AllowAnonymous]
-        public IActionResult Register([FromBody] UserParams userParams)
+        public IActionResult Register([FromBody] UserDTO userParams)
         {
             var result = new General_Result();
             try
@@ -33,11 +33,6 @@ namespace KaDiFi.Controllers
                 {
                     result.HasError = true;
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.FirstName), "Invisible Name? works fine... just not here!");
-                }
-                if (string.IsNullOrWhiteSpace(userParams.email) || !userParams.email.Contains("@") || !userParams.email.Contains(".") || userParams.email.Length < 5)
-                {
-                    result.HasError = true;
-                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Invalid Email!");
                 }
                 if (userParams.age < 12 || userParams.age > 100)
                 {
@@ -50,8 +45,18 @@ namespace KaDiFi.Controllers
                     result.HasError = true;
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
                 }
+                try
+                {
+                    var emailValidationInstance = new System.Net.Mail.MailAddress(userParams.email);
+                }
+                catch (Exception)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Invalid Email!");
+                }
+
                 var accountExistance = _accountBO.GetUserBy(userParams.email);
-                if (accountExistance.IsSuccess)
+                if (accountExistance.IsSuccess && accountExistance.Data != null)
                 {
                     result.HasError = true;
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Account with same email exists, Sign in instead?");
@@ -84,37 +89,123 @@ namespace KaDiFi.Controllers
             }
         }
         [HttpPost]
+        [Route("VerifyAccount")]
+        [AllowAnonymous]
+        public IActionResult VerifyAccount(string verificationCode)
+        {
+            var result = new General_Result();
+            try
+            {
+                if (string.IsNullOrEmpty(verificationCode))
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.VerificationCode), "Invalid Verification Code");
+                }
+                var verificationObjExistence = _accountBO.GetAccountVerificationBy(verificationCode);
+                if (verificationObjExistence.IsSuccess && verificationObjExistence.Data == null)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.VerificationCode), "Invalid Verification Code");
+                }
+
+                if (!result.HasError)
+                {
+                    var registeringStatus = _accountBO.VerifyAccount(verificationCode);
+                    if (!registeringStatus.IsSuccess)
+                    {
+                        result.HasError = true;
+                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), registeringStatus.ErrorMessage);
+                    }
+                }
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+        }
+        [HttpPost]
+        [Route("ForgetPassword")]
+        [AllowAnonymous]
+        public IActionResult ForgetPassword(string email)
+        {
+            var result = new General_Result();
+            try
+            {
+                try
+                {
+                    var emailValidationInstance = new System.Net.Mail.MailAddress(email);
+                }
+                catch (Exception)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Invalid Email!");
+                }
+                var userObj = _accountBO.GetUserBy(email);
+                if (userObj.IsSuccess && userObj.Data == null)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.VerificationCode), "Invalid Email");
+                }
+
+                if (!result.HasError)
+                {
+                    var user = (User)userObj.Data;
+
+                    var sendMailStatus= StaticHelpers.sendEmail(user.Email, "Forgot Password?", user.Password);
+                    if (!sendMailStatus)
+                    {
+                        result.HasError = true;
+                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), General_Strings.APITempIssueMessage);
+                    }
+                }
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+        }
+        [HttpPost]
         [Route("GetAccess")]
         [AllowAnonymous]
-        public IActionResult GetAccess(string email, string password)
+        public IActionResult GetAccess([FromBody] LoginDTO model)
         {
             var result = new General_ResultWithData();
 
             try
             {
-                if (string.IsNullOrWhiteSpace(email) || !email.Contains("@") || !email.Contains(".") || email.Length < 5)
+                try
+                {
+                    var emailValidationInstance = new System.Net.Mail.MailAddress(model.email);
+                }
+                catch (Exception)
                 {
                     result.HasError = true;
-                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Wrong Email!");
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Invalid Email!");
                 }
-                if (string.IsNullOrWhiteSpace(password))
+                if (string.IsNullOrWhiteSpace(model.password))
                 {
                     result.HasError = true;
-                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), "Wrong Password!");
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), "Invalid Credintials!");
                 }
 
-                if (result.HasError)
-                    return Ok(result);
-
-                var authentiateUserStatus = _accountBO.GetAccess(email, password);
-                if (!authentiateUserStatus.IsSuccess)
+                if (!result.HasError)
                 {
-                    result.HasError = true;
-                    result.ErrorsDictionary.Add(ErrorKeyTypes.AuthenticatingError.ToString(), authentiateUserStatus.ErrorMessage);
-                    return Ok(result);
-                }
+                    var authentiateUserStatus = _accountBO.GetAccess(model.email, model.password);
+                    if ((authentiateUserStatus.IsSuccess && authentiateUserStatus.Data == null) || !authentiateUserStatus.IsSuccess)
+                    {
+                        result.HasError = true;
+                        result.ErrorsDictionary.Add(ErrorKeyTypes.AuthenticatingError.ToString(), authentiateUserStatus.ErrorMessage);
+                        return Ok(result);
+                    }
 
-                result.Data = authentiateUserStatus.Data;
+                    result.Data = authentiateUserStatus.Data;
+                }
             }
             catch (Exception)
             {
@@ -124,31 +215,30 @@ namespace KaDiFi.Controllers
 
             return Ok(result);
         }
-
         [HttpPost]
         [Route("ChangePassword")]
-        [AllowAnonymous]
         public IActionResult ChangePassword([FromBody] ChangePasswordDTO model)
         {
             var result = new General_Result();
             try
             {
-                var existingUser = _accountBO.GetUserBy("email from token", model.oldPassword);
-                if (!existingUser.IsSuccess)
-                {
-                    var passwordIssues = "Invalid Old Password!";
-                    result.HasError = true;
-                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
-                }
                 if (string.IsNullOrWhiteSpace(model.newPassword) || model.newPassword.Length < 5 || !StaticHelpers.validateSpecialChars(model.newPassword))
                 {
                     var passwordIssues = "Password must be 5 minimum length with specials characters!";
                     result.HasError = true;
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
                 }
+                //TODO: Get token credintials
+                var userObj = _accountBO.GetUserBy("email from token", model.oldPassword);
+                if (userObj.IsSuccess && userObj.Data == null)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), "Invalid Credintials!");
+                }
 
                 if (!result.HasError)
                 {
+                    //TODO: 
                     var changePasswordStatus = _accountBO.ChangeUserPassword("email from token", model.newPassword);
                     if (!changePasswordStatus.IsSuccess)
                     {
@@ -165,7 +255,53 @@ namespace KaDiFi.Controllers
                 return Ok(result);
             }
         }
+        [HttpPost]
+        [Route("FreezeAccount")]
+        public IActionResult FreezeAccount([FromBody] FreezeAccountDTO model)
+        {
+            var result = new General_Result();
+            try
+            {
+                if (string.IsNullOrWhiteSpace(model.password))
+                {
+                    var passwordIssues = "Invalid Credintials!";
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
+                }
+                if (model.daysCount < 1)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.FreezingPeriod), "Invalid Freezing period!");
+                }
 
+                //TODO: Get token credintials
+                var userObj = _accountBO.GetUserBy("email from token", model.password);
+                if (userObj.IsSuccess && userObj.Data == null)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), "Invalid Credintials!");
+                }
+
+                if (!result.HasError)
+                {
+                    var disableAccountStatus = _accountBO.DisableAccount("email from token", model.daysCount);
+                    if (!disableAccountStatus.IsSuccess)
+                    {
+                        result.HasError = true;
+                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), disableAccountStatus.ErrorMessage);
+                    }
+                }
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+        }
+       
+      
 
         [HttpPost]
         [Route("DisableNews")]
@@ -202,41 +338,7 @@ namespace KaDiFi.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("DisableAccount")]
-        [AllowAnonymous]
-        public IActionResult DisableAccount([FromBody] string password)
-        {
-            var result = new General_Result();
-            try
-            {
-                var userExistance = _accountBO.GetUserBy("email from token", password);
-                if (!userExistance.IsSuccess)
-                {
-                    var passwordIssues = "Inconsistant Credintials!";
-                    result.HasError = true;
-                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
-                }
-
-                if (!result.HasError)
-                {
-                    var disableAccountStatus = _accountBO.DisableAccount("email from token");
-                    if (!disableAccountStatus.IsSuccess)
-                    {
-                        result.HasError = true;
-                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), disableAccountStatus.ErrorMessage);
-                    }
-                }
-                return Ok(result);
-            }
-            catch (Exception)
-            {
-                result.HasError = true;
-                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
-                return Ok(result);
-            }
-        }
-
+        
 
 
         //[HttpPost]

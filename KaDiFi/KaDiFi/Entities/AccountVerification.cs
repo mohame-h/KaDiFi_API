@@ -2,7 +2,7 @@
 
 namespace KaDiFi.Entities
 {
-    public class AccountActivation : BaseEntity
+    public class AccountVerification : BaseEntity
     {
         public string Id { get; set; }
         public string UserId { get; set; }

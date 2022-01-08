@@ -28,6 +28,8 @@
         Age,
         Email,
         Password,
+        VerificationCode,
+        FreezingPeriod,
 
     }
 
@@ -49,6 +51,14 @@
         Songs = 4,
 
     }
+    public enum MediaReactTypes
+    {
+        None= 0,
+        Like= 1,
+        Dislike= 2,
+
+    }
+
     public enum PeriodTypes
     {
         All = 0,
