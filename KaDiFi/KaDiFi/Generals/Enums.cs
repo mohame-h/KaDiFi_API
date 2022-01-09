@@ -18,18 +18,19 @@
         SavingError,
         AuthenticatingError,
         TokenError,
+        ParamError,
 
     }
 
     public enum FormFieldTypes
     {
-        FirstName,
-        LastName,
+        Name,
         Age,
         Email,
         Password,
         VerificationCode,
         FreezingPeriod,
+        MediaId,
 
     }
 
@@ -53,9 +54,9 @@
     }
     public enum MediaReactTypes
     {
-        None= 0,
-        Like= 1,
-        Dislike= 2,
+        None = 0,
+        Like = 1,
+        Dislike = 2,
 
     }
 

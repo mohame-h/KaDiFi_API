@@ -4,8 +4,6 @@ using KaDiFi.Helpers;
 using KaDiFi.Helpers.IHelper;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace KaDiFi.Controllers
 {
@@ -53,7 +51,7 @@ namespace KaDiFi.Controllers
 
         [HttpGet]
         [Route("GetSpecificMedia")]
-        public IActionResult GetSpecificMedia([FromBody]GetMediaDTO model)
+        public IActionResult GetSpecificMedia([FromBody] GetMediaDTO model)
         {
 
             var result = new General_ResultWithData();
@@ -61,7 +59,7 @@ namespace KaDiFi.Controllers
             try
             {
                 //TODO: Get user credintials
-                var specificMediaStatus= _mediaBO.GetSpecificMedia(model.mediaId, model.commentsTotalCount, model.repliesTotalCount, "email from token");
+                var specificMediaStatus = _mediaBO.GetSpecificMedia(model.mediaId, "email from token", model.commentsTotalCount, model.repliesTotalCount);
                 if (!specificMediaStatus.IsSuccess || (specificMediaStatus.IsSuccess && specificMediaStatus.Data == null))
                 {
                     result.HasError = true;
@@ -70,6 +68,34 @@ namespace KaDiFi.Controllers
                 }
 
                 result.Data = specificMediaStatus.Data;
+            }
+            catch (Exception ex)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("AddOrRemoveMediaReact")]
+        public IActionResult AddOrRemoveMediaReact([FromBody] AddOrRemoveReactDTO model)
+        {
+
+            var result = new General_Result();
+
+            try
+            {
+                //TODO: Get user credintials
+                var addOrRemoveStatus = _mediaBO.addOrRemoveMediaReact(model.mediaId, model.reactTypeId, "Email from token");
+                if (!addOrRemoveStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), addOrRemoveStatus.ErrorMessage);
+                    return Ok(result);
+                }
 
             }
             catch (Exception ex)
@@ -82,12 +108,191 @@ namespace KaDiFi.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Route("AddMediaComment")]
+        public IActionResult AddMediaComment([FromBody] AddMediaCommentDTO model)
+        {
+            var result = new General_Result();
 
+            try
+            {
+                //TODO: Get user credintials
+                var addCommentStatus = _mediaBO.AddComment(model.mediaId, model.commentText, "Email from token");
+                if (!addCommentStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), addCommentStatus.ErrorMessage);
+                    return Ok(result);
+                }
 
+            }
+            catch (Exception ex)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
 
+            return Ok(result);
+        }
 
+        [HttpPost]
+        [Route("EditMediaComment")]
+        public IActionResult EditMediaComment([FromBody] EditMediaCommentDTO model)
+        {
+            var result = new General_Result();
 
+            try
+            {
+                //TODO: Get user credintials
+                var addOrRemoveStatus = _mediaBO.EditComment(model.commentId, model.commentText, "Email from token");
+                if (!addOrRemoveStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), addOrRemoveStatus.ErrorMessage);
+                    return Ok(result);
+                }
 
+            }
+            catch (Exception ex)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("GetMediaComments")]
+        public IActionResult GetMediaComments([FromBody] GetMediaCommentsDTO model)
+        {
+            var result = new General_ResultWithData();
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(model.mediaId))
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.ParamError, FormFieldTypes.MediaId), "Invalid media, Please refresh!");
+                }
+                model.itemsCount = model.itemsCount == 0 ? 10 : model.itemsCount;
+                model.pageNumber = model.pageNumber == 0 ? 1 : model.pageNumber;
+
+                //TODO: Get user credintials
+                var getMediaCommentsStatus = _mediaBO.GetMediaComments(model.mediaId, model.itemsCount, model.pageNumber, "Email from token");
+                if (!getMediaCommentsStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), getMediaCommentsStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+                result.Data = getMediaCommentsStatus.Data;
+            }
+            catch (Exception ex)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("AddMediaReply")]
+        public IActionResult AddMediaReply([FromBody] AddMediaReplyDTO model)
+        {
+            var result = new General_Result();
+
+            try
+            {
+                //TODO: Get user credintials
+                var addReplyStatus = _mediaBO.AddReply(model.commentId, model.replyText, "Email from token");
+                if (!addReplyStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), addReplyStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("EditMediaReply")]
+        public IActionResult EditMediaReply([FromBody] EditTextDTO model)
+        {
+            var result = new General_Result();
+
+            try
+            {
+                //TODO: Get user credintials
+                var editReplyStatus = _mediaBO.EditReply(model.id, model.text, "Email from token");
+                if (!editReplyStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), editReplyStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("GetMediaReplies")]
+        public IActionResult GetMediaReplies([FromBody] GetMediaRepliesDTO model)
+        {
+            var result = new General_ResultWithData();
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(model.commentId))
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.ParamError, FormFieldTypes.MediaId), "issue with comment, Please refresh the page!");
+                }
+                model.itemsCount = model.itemsCount == 0 ? 10 : model.itemsCount;
+                model.pageNumber = model.pageNumber == 0 ? 1 : model.pageNumber;
+
+                //TODO: Get user credintials
+                var getMediaRepliesStatus = _mediaBO.GetMediaReplies(model.commentId, model.itemsCount, model.pageNumber, "Email from token");
+                if (!getMediaRepliesStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), getMediaRepliesStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+                result.Data = getMediaRepliesStatus.Data;
+            }
+            catch (Exception ex)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+
+            return Ok(result);
+        }
 
 
 

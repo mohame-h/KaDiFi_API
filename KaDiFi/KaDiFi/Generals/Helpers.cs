@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Net.Mail;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace KaDiFi.Helpers
 {
@@ -43,22 +41,24 @@ namespace KaDiFi.Helpers
             {
 
                 MailMessage message = new MailMessage();
-                SmtpClient smtp = new SmtpClient();
                 message.From = new MailAddress("no-reply@KeDiFi.sys");
+                //message.From = new MailAddress("mhdraz98@gmail.com");
                 message.To.Add(new MailAddress(toMail));
                 message.Subject = subject;
                 message.IsBodyHtml = true;
                 message.Body = htmlString;
+
+                SmtpClient smtp = new SmtpClient();
+                smtp.UseDefaultCredentials = false;
                 smtp.Port = 587;
                 smtp.Host = "smtp.gmail.com"; //for gmail host  
                 smtp.EnableSsl = true;
-                smtp.UseDefaultCredentials = false;
-                smtp.Credentials = new NetworkCredential("mhdraz98@gmail.com", "Aaaaa#1234");
+                smtp.Credentials = new NetworkCredential("mhdraz98@gmail.com", "faQer5005");
                 smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
                 smtp.Send(message);
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 return false;
             }

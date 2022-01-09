@@ -51,20 +51,17 @@ namespace KaDiFi.BOs
                     _db.User.Add(newUser);
 
                     var verificationObj = new AccountVerification();
-                    verificationObj .Id = Guid.NewGuid().ToString();
-                    verificationObj .Code = Guid.NewGuid().ToString();
-                    verificationObj .CreatedAt = DateTime.Now;
+                    verificationObj.Id = Guid.NewGuid().ToString();
+                    verificationObj.Code = Guid.NewGuid().ToString();
+                    verificationObj.CreatedAt = DateTime.Now;
                     verificationObj.UserId = newUser.Id;
                     _db.AccountVerification.Add(verificationObj);
 
                     _db.SaveChanges();
 
-                    //TODO: Send Email staff;
                     var sendMailStatus = StaticHelpers.sendEmail(newUser.Email, "Account Verification", verificationObj.Code);
                     if (!sendMailStatus)
-                    {
                         throw new Exception();
-                    }
 
                     transaction.Commit();
                 }
@@ -87,7 +84,7 @@ namespace KaDiFi.BOs
                 {
                     var verificationObj = _db.AccountVerification.FirstOrDefault(z => z.IsActive && z.Code == verificationCode && z.DeletedAt == null);
                     verificationObj.IsActive = false;
-                    verificationObj.DeletedAt= DateTime.Now;
+                    verificationObj.DeletedAt = DateTime.Now;
 
                     var userObj = _db.User.FirstOrDefault(z => z.Id == verificationObj.UserId);
                     userObj.IsActive = true;
@@ -248,7 +245,7 @@ namespace KaDiFi.BOs
             {
                 var verificationObj = _db.AccountVerification.FirstOrDefault(z => z.IsActive && z.Code == verificationCode && z.DeletedAt == null);
                 if (verificationObj != null)
-                result.Data = verificationObj;
+                    result.Data = verificationObj;
             }
             catch (Exception ex)
             {
@@ -282,8 +279,8 @@ namespace KaDiFi.BOs
             {
                 var user = _db.User.FirstOrDefault(z => z.Email == email && z.Password == password && z.IsActive);
                 if (user != null)
-                result.Data = user;
-                
+                    result.Data = user;
+
             }
             catch (Exception ex)
             {
@@ -293,7 +290,7 @@ namespace KaDiFi.BOs
 
             return result;
         }
-       
+
 
         #endregion
 

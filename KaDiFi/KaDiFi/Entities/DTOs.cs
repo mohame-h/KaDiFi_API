@@ -3,6 +3,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KaDiFi.Entities
 {
+    public class PaginationDTO
+    {
+        public int itemsCount { get; set; }
+        public int pageNumber { get; set; }
+    }
+
     public class ChangePasswordDTO
     {
         [MinLength(5, ErrorMessage = "At least 5 Digits")]
@@ -15,13 +21,6 @@ namespace KaDiFi.Entities
     {
         public string password { get; set; }
         public int daysCount { get; set; }
-    }
-
-    public class MediaCommentDTO
-    {
-        public string mediaId { get; set; }
-        public string UserId { get; set; }
-        public string commentBody { get; set; }
     }
 
     public class LoginDTO
@@ -47,12 +46,45 @@ namespace KaDiFi.Entities
     public class GetMediaDTO
     {
         public string mediaId { get; set; }
-        public int commentsTotalCount{ get; set; }
+        public int commentsTotalCount { get; set; }
         public int repliesTotalCount { get; set; }
     }
 
+    public class AddOrRemoveReactDTO
+    {
+        public string mediaId { get; set; }
+        public int reactTypeId { get; set; }
+    }
 
+    public class AddMediaCommentDTO
+    {
+        public string mediaId { get; set; }
+        public string commentText { get; set; }
+    }
+    public class EditMediaCommentDTO
+    {
+        public string commentId { get; set; }
+        public string commentText { get; set; }
+    }
 
+    public class GetMediaCommentsDTO : PaginationDTO
+    {
+        public string mediaId { get; set; }
+    }
 
+    public class AddMediaReplyDTO
+    {
+        public string commentId { get; set; }
+        public string replyText { get; set; }
+    }
+    public class EditTextDTO
+    {
+        public string id { get; set; }
+        public string text { get; set; }
+    }
+    public class GetMediaRepliesDTO : PaginationDTO
+    {
+        public string commentId { get; set; }
+    }
 
 }

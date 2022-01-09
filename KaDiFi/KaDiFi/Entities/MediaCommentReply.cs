@@ -10,13 +10,13 @@ namespace KaDiFi.Entities
         [MinLength(1, ErrorMessage = "At least 1 Digit")]
         public string Body { get; set; }
 
-        public string CommenterId { get; set; }
-        [ForeignKey("CommenterId")]
+        public string ReplierId { get; set; }
+        [ForeignKey("ReplierId")]
         public User Users { get; set; }
 
         public string CommentId { get; set; }
         [ForeignKey("CommentId")]
-        public MediaComment Comments{ get; set; }
+        public MediaComment Comments { get; set; }
     }
 
 

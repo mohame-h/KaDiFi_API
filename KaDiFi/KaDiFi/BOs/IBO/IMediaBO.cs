@@ -8,14 +8,13 @@ namespace KaDiFi.BOs.IBO
 
         General_StatusWithData GetHomeMedia();
         General_StatusWithData GetSpecificMedia(string mediaId, string userEmail, int commentsCount, int repliesCount);
-
-
-
-
-
-
-
-
+        General_Status addOrRemoveMediaReact(string mediaId, int reactTypeId, string userEmail);
+        General_Status AddComment(string mediaId, string commentText, string userEmail);
+        General_Status EditComment(string commentId, string commentText, string userEmail);
+        General_StatusWithData GetMediaComments(string mediaId, int itemsCount, int pageNumber, string userEmail);
+        General_Status AddReply(string commentId, string replyText, string userEmail);
+        General_Status EditReply(string replyId, string replyText, string userEmail);
+        General_StatusWithData GetMediaReplies(string commentId, int itemsCount, int pageNumber, string userEmail);
 
 
         General_StatusWithData GetCategoryMedia(int mediaCategory, int periodType);
@@ -27,6 +26,5 @@ namespace KaDiFi.BOs.IBO
 
         string GetMediaDirectoryPath(int mediaCategory);
 
-        General_StatusWithData AddComment(MediaCommentDTO model);
     }
 }

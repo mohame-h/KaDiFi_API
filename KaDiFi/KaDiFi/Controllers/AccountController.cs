@@ -9,6 +9,7 @@ using System;
 namespace KaDiFi.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class AccountController : Controller
     {
         private IAccountBO _accountBO;
@@ -32,7 +33,7 @@ namespace KaDiFi.Controllers
                 if (string.IsNullOrWhiteSpace(userParams.name))
                 {
                     result.HasError = true;
-                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.FirstName), "Invisible Name? works fine... just not here!");
+                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Name), "Invisible Name? works fine... just not here!");
                 }
                 if (userParams.age < 12 || userParams.age > 100)
                 {
@@ -143,22 +144,25 @@ namespace KaDiFi.Controllers
                     result.HasError = true;
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Invalid Email!");
                 }
-                var userObj = _accountBO.GetUserBy(email);
-                if (userObj.IsSuccess && userObj.Data == null)
-                {
-                    result.HasError = true;
-                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.VerificationCode), "Invalid Email");
-                }
-
                 if (!result.HasError)
                 {
-                    var user = (User)userObj.Data;
-
-                    var sendMailStatus= StaticHelpers.sendEmail(user.Email, "Forgot Password?", user.Password);
-                    if (!sendMailStatus)
+                    var userObj = _accountBO.GetUserBy(email);
+                    if (userObj.IsSuccess && userObj.Data == null)
                     {
                         result.HasError = true;
-                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), General_Strings.APITempIssueMessage);
+                        result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), "Invalid Email");
+                    }
+
+                    if (!result.HasError)
+                    {
+                        var user = (User)userObj.Data;
+
+                        var sendMailStatus = StaticHelpers.sendEmail(user.Email, "Forgot Password?", user.Password);
+                        if (!sendMailStatus)
+                        {
+                            result.HasError = true;
+                            result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), General_Strings.APITempIssueMessage);
+                        }
                     }
                 }
                 return Ok(result);
@@ -220,6 +224,7 @@ namespace KaDiFi.Controllers
         public IActionResult ChangePassword([FromBody] ChangePasswordDTO model)
         {
             var result = new General_Result();
+
             try
             {
                 if (string.IsNullOrWhiteSpace(model.newPassword) || model.newPassword.Length < 5 || !StaticHelpers.validateSpecialChars(model.newPassword))
@@ -300,8 +305,8 @@ namespace KaDiFi.Controllers
                 return Ok(result);
             }
         }
-       
-      
+
+
 
         [HttpPost]
         [Route("DisableNews")]
@@ -338,7 +343,7 @@ namespace KaDiFi.Controllers
             }
         }
 
-        
+
 
 
         //[HttpPost]

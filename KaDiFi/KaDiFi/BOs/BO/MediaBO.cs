@@ -40,34 +40,34 @@ namespace KaDiFi.BOs
                                   tblm.Title,
                                   tblm.CoverSource,
                                   tblm.Description,
-                                  ViewedAt= tblv.CreatedAt,
+                                  ViewedAt = tblv.CreatedAt,
                               }
                              )
                              .OrderByDescending(z => z.ViewedAt)
                              .Take(8)
                              .Select(z => new MediaResult
                              {
-                                 Id= z.Id,
-                                 Title= z.Title,
-                                 CoverSource= z.CoverSource,
-                                 Description= string.Join(" ", z.Description.Split().Take(20)),
-                                 ViewsCount= _db.MediaViews.Count(x=> x.MediaId == z.Id)
+                                 Id = z.Id,
+                                 Title = z.Title,
+                                 CoverSource = z.CoverSource,
+                                 Description = string.Join(" ", z.Description.Split().Take(20)),
+                                 ViewsCount = _db.MediaViews.Count(x => x.MediaId == z.Id)
                              })
                              .ToList();
                 homeMedia.Add("Recent", recent);
 
                 var recommendedMediaId = _db.Media.Select(z => new
-                            {
-                                z.Id,
-                                Likes = _db.MediaViews.Count(x => x.MediaId == z.Id && x.React == (int)MediaReactTypes.Like),
-                                Dislikes = _db.MediaViews.Count(x => x.MediaId == z.Id && x.React == (int)MediaReactTypes.Dislike),
-                            })
+                {
+                    z.Id,
+                    Likes = _db.MediaViews.Count(x => x.MediaId == z.Id && x.React == (int)MediaReactTypes.Like),
+                    Dislikes = _db.MediaViews.Count(x => x.MediaId == z.Id && x.React == (int)MediaReactTypes.Dislike),
+                })
                             .Where(z => z.Likes > 0 && z.Dislikes > 0 && ((z.Likes / z.Dislikes) > 3))
-                            .Select(z=> z.Id)
+                            .Select(z => z.Id)
                             .ToList();
                 var recommended = (
                                     from tblm in _db.Media
-                                    join tblv in _db.MediaViews.Where(z=> recommendedMediaId.Contains(z.Id))
+                                    join tblv in _db.MediaViews.Where(z => recommendedMediaId.Contains(z.Id))
                                     on tblm.Id equals tblv.MediaId
 
                                     select new
@@ -93,7 +93,8 @@ namespace KaDiFi.BOs
 
                 var cartoons = _db.Media.Where(z => z.CategoryId == (int)MediaCategories.Cartoons)
                                         .Take(5)
-                                        .Select(z => new MediaResult {
+                                        .Select(z => new MediaResult
+                                        {
                                             Id = z.Id,
                                             Title = z.Title,
                                             CoverSource = z.CoverSource,
@@ -105,7 +106,8 @@ namespace KaDiFi.BOs
 
                 var sports = _db.Media.Where(z => z.CategoryId == (int)MediaCategories.Sports)
                                         .Take(5)
-                                        .Select(z => new MediaResult {
+                                        .Select(z => new MediaResult
+                                        {
                                             Id = z.Id,
                                             Title = z.Title,
                                             CoverSource = z.CoverSource,
@@ -159,8 +161,9 @@ namespace KaDiFi.BOs
                                                             CommentText = tblc.Body,
                                                             CommentCreationTime = tblc.CreatedAt,
                                                             IsCurrenctUser = (tblu.Id == user.Id)
-                                                        }
-                                                        )
+                                                        })
+                                                        .OrderByDescending(oo => oo.CommentCreationTime)
+                                                        .Take(commentsCount)
                                                         .Select(c => new
                                                         {
                                                             c.CommentId,
@@ -168,8 +171,11 @@ namespace KaDiFi.BOs
                                                             c.CommentText,
                                                             c.CommentCreationTime,
                                                             c.IsCurrenctUser,
+                                                            TotalLikesCount = _db.MediaViews.Count(z => z.React == (int)MediaReactTypes.Like),
+                                                            TotalDislikesCount = _db.MediaViews.Count(z => z.React == (int)MediaReactTypes.Dislike),
                                                             LastReply = _db.MediaCommentReply.Where(r => r.CommentId == c.CommentId)
                                                                         .OrderByDescending(o => o.DeletedAt == null ? o.UpdatedAt == null ? o.CreatedAt : o.UpdatedAt : o.DeletedAt)
+                                                                        .Take(1)
                                                                         .Select(r => new
                                                                         {
                                                                             r.CommentId,
@@ -187,7 +193,6 @@ namespace KaDiFi.BOs
                                                                             r.ReplyCreationTime,
                                                                             IsCurrentUser = r.Replier == null ? false : (r.Replier.Id == user.Id)
                                                                         })
-                                                                        .FirstOrDefault(),
                                                         })
 
                                         })
@@ -204,25 +209,25 @@ namespace KaDiFi.BOs
                                             z.Comments
 
                                         }).FirstOrDefault();
-                                        
+
                 if (mediaItem == null)
                 {
                     result.ErrorMessage = "Error while retreiving media, Please refresh the page!";
                     return result;
                 }
 
-                var suggestedMedia = (from tblm in _db.Media.Where(z=> z.CategoryId == mediaItem.CategoryId)
-                              join tblv in _db.MediaViews
-                              on tblm.Id equals tblv.MediaId
+                var suggestedMedia = (from tblm in _db.Media.Where(z => z.CategoryId == mediaItem.CategoryId)
+                                      join tblv in _db.MediaViews
+                                      on tblm.Id equals tblv.MediaId
 
-                              select new
-                              {
-                                  tblm.Id,
-                                  tblm.Title,
-                                  tblm.CoverSource,
-                                  tblm.Description,
-                                  ViewedAt = tblv.CreatedAt,
-                              }
+                                      select new
+                                      {
+                                          tblm.Id,
+                                          tblm.Title,
+                                          tblm.CoverSource,
+                                          tblm.Description,
+                                          ViewedAt = tblv.CreatedAt,
+                                      }
                              )
                              .OrderByDescending(z => z.ViewedAt)
                              .Take(8)
@@ -236,7 +241,7 @@ namespace KaDiFi.BOs
                              })
                              .ToList();
 
-                result.Data = new GetMediaResult() { mediaItem= mediaItem, suggestedMedia= suggestedMedia};
+                result.Data = new GetMediaResult() { mediaItem = mediaItem, suggestedMedia = suggestedMedia };
             }
             catch (Exception ex)
             {
@@ -247,14 +252,256 @@ namespace KaDiFi.BOs
             return result;
         }
 
+        public General_Status addOrRemoveMediaReact(string mediaId, int reactTypeId, string userEmail)
+        {
+            var result = new General_Status();
 
+            try
+            {
+                var userId = _db.User.FirstOrDefault(z => z.Email == userEmail)?.Id;
+                var view = _db.MediaViews.FirstOrDefault(z => z.MediaId == mediaId && z.UserId == userId);
+                if (view == null)
+                    throw new Exception();
 
+                view.React = reactTypeId;
+                view.UpdatedAt = DateTime.Now;
 
+                _db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = General_Strings.APIIssueMessage;
+            }
 
+            return result;
+        }
 
+        public General_Status AddComment(string mediaId, string commentText, string userEmail)
+        {
+            var result = new General_Status();
+            try
+            {
+                var user = _db.User.FirstOrDefault(z => z.Email == userEmail);
+                if (user == null)
+                    throw new Exception();
 
+                var newComment = new MediaComment();
+                newComment.Id = Guid.NewGuid().ToString();
+                newComment.CommenterId = user.Id;
+                newComment.MediaId = mediaId;
+                newComment.Body = commentText;
+                newComment.CreatedAt = DateTime.Now;
+                _db.MediaComment.Add(newComment);
+                _db.SaveChanges();
 
+                //var comments = (
+                //            from tblcomment in _db.MediaComment.Where(z => z.MediaId == mediaId && z.IsActive)
+                //            join tbluser in _db.User
+                //            on tblcomment.CommenterId equals tbluser.Id
+                //            select new
+                //            {
+                //                userName = tbluser.IsActive ? tbluser.Name : "",
+                //                commentBody = tbluser.IsActive ? tblcomment.Body : "",
+                //                commentDate = tblcomment.UpdatedAt == null ? tblcomment.CreatedAt : tblcomment.UpdatedAt,
+                //                isCurrenctUser = tbluser.Id == user.Id ? true : false,
+                //                isActiveUser = tbluser.IsActive
+                //            })
+                //            .OrderByDescending(z => z.commentDate)
+                //            .ToList();
 
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "Temp Server Error.";
+            }
+
+            return result;
+        }
+
+        public General_Status EditComment(string commentId, string commentText, string userEmail)
+        {
+            var result = new General_Status();
+            try
+            {
+                var user = _db.User.FirstOrDefault(z => z.Email == userEmail);
+                if (user == null)
+                    throw new Exception();
+
+                var comment = _db.MediaComment.FirstOrDefault(z => z.Id == commentId);
+                if (comment == null)
+                    throw new Exception();
+
+                comment.Body = commentText;
+                comment.UpdatedAt = DateTime.Now;
+
+                _db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "Temp Server Error.";
+            }
+
+            return result;
+        }
+
+        public General_StatusWithData GetMediaComments(string mediaId, int itemsCount, int pageNumber, string userEmail)
+        {
+            var result = new General_StatusWithData();
+            try
+            {
+                var user = _db.User.FirstOrDefault(z => z.Email == userEmail);
+                if (user == null)
+                    throw new Exception();
+
+                var comments = (from tblc in _db.MediaComment.Where(c => c.MediaId == mediaId)
+                                join tblu in _db.User
+                                on tblc.CommenterId equals tblu.Id
+                                select new
+                                {
+                                    CommentId = tblc.Id,
+                                    CommenterName = tblu.Name,
+                                    CommentText = tblc.Body,
+                                    CommentCreationTime = tblc.CreatedAt,
+                                    IsCurrenctUser = (tblu.Id == user.Id)
+                                })
+                                .OrderByDescending(oo => oo.CommentCreationTime)
+                                .Skip(pageNumber * itemsCount)
+                                .Take(itemsCount)
+                                .Select(c => new
+                                {
+                                    c.CommentId,
+                                    c.CommenterName,
+                                    c.CommentText,
+                                    c.CommentCreationTime,
+                                    c.IsCurrenctUser,
+                                    TotalLikesCount = _db.MediaViews.Count(z => z.React == (int)MediaReactTypes.Like),
+                                    TotalDislikesCount = _db.MediaViews.Count(z => z.React == (int)MediaReactTypes.Dislike),
+                                    LastReply = _db.MediaCommentReply.Where(r => r.CommentId == c.CommentId)
+                                                .OrderByDescending(o => o.DeletedAt == null ? o.UpdatedAt == null ? o.CreatedAt : o.UpdatedAt : o.DeletedAt)
+                                                .Take(1)
+                                                .Select(r => new
+                                                {
+                                                    r.CommentId,
+                                                    ReplyId = r.Id,
+                                                    Replier = _db.User.FirstOrDefault(u => u.Id == user.Id),
+                                                    ReplyText = r.Body,
+                                                    ReplyCreationTime = r.CreatedAt,
+                                                })
+                                                .Select(r => new
+                                                {
+                                                    r.CommentId,
+                                                    r.ReplyId,
+                                                    ReplierName = r.Replier == null ? "" : r.Replier.Name,
+                                                    r.ReplyText,
+                                                    r.ReplyCreationTime,
+                                                    IsCurrentUser = r.Replier == null ? false : (r.Replier.Id == user.Id)
+                                                })
+                                })
+                                .ToList();
+
+                result.Data = comments;
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "Temp Server Error.";
+            }
+
+            return result;
+        }
+
+        public General_Status AddReply(string commentId, string replyText, string userEmail)
+        {
+            var result = new General_Status();
+            try
+            {
+                var user = _db.User.FirstOrDefault(z => z.Email == userEmail);
+                var comment = _db.MediaComment.FirstOrDefault(z => z.Id == commentId);
+                if (user == null || comment == null)
+                    throw new Exception();
+
+                var newReply = new MediaCommentReply();
+                newReply.Id = Guid.NewGuid().ToString();
+                newReply.ReplierId = user.Id;
+                newReply.CommentId = commentId;
+                newReply.Body = replyText;
+                newReply.CreatedAt = DateTime.Now;
+                _db.MediaCommentReply.Add(newReply);
+                _db.SaveChanges();
+
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "Temp Server Error.";
+            }
+
+            return result;
+        }
+
+        public General_Status EditReply(string replyId, string replyText, string userEmail)
+        {
+            var result = new General_Status();
+            try
+            {
+                var user = _db.User.FirstOrDefault(z => z.Email == userEmail);
+                var reply = _db.MediaCommentReply.FirstOrDefault(z => z.Id == replyId);
+                if (user == null || reply == null)
+                    throw new Exception();
+
+                reply.Body = replyText;
+                reply.UpdatedAt = DateTime.Now;
+
+                _db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "Temp Server Error.";
+            }
+
+            return result;
+        }
+
+        public General_StatusWithData GetMediaReplies(string commentId, int itemsCount, int pageNumber, string userEmail)
+        {
+            var result = new General_StatusWithData();
+            try
+            {
+                var user = _db.User.FirstOrDefault(z => z.Email == userEmail);
+                if (user == null)
+                    throw new Exception();
+
+                var replies = (from tblr in _db.MediaCommentReply.Where(c => c.CommentId == commentId)
+                               join tblu in _db.User
+                               on tblr.ReplierId equals tblu.Id
+                               select new
+                               {
+                                   CommentId = tblr.CommentId,
+                                   ReplyId = tblr.Id,
+                                   ReplierName = tblu.Name,
+                                   ReplyText = tblr.Body,
+                                   ReplyCreationTime = tblr.CreatedAt,
+                                   IsCurrenctUser = (tblu.Id == user.Id)
+                               })
+                               .OrderByDescending(oo => oo.ReplyCreationTime)
+                               .Skip(pageNumber * itemsCount)
+                               .Take(itemsCount)
+                               .ToList();
+
+                result.Data = replies;
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "Temp Server Error.";
+            }
+
+            return result;
+        }
 
 
 
@@ -278,7 +525,7 @@ namespace KaDiFi.BOs
 
         }
 
-       
+
         public General_Status RemoveMedia(string mediaId)
         {
             throw new NotImplementedException();
@@ -329,45 +576,6 @@ namespace KaDiFi.BOs
             }
 
             return path;
-        }
-
-        public General_StatusWithData AddComment(MediaCommentDTO model)
-        {
-            var result = new General_StatusWithData();
-            try
-            {
-                var newComment = new MediaComment();
-                newComment.Id = Guid.NewGuid().ToString();
-                newComment.CommenterId = model.UserId;
-                newComment.MediaId = model.mediaId;
-                newComment.Body = model.commentBody;
-                newComment.CreatedAt = DateTime.Now;
-                _db.MediaCommnet.Add(newComment);
-                _db.SaveChanges();
-
-                var comments = (
-                            from tblcomment in _db.MediaCommnet.Where(z => z.MediaId == model.mediaId && z.IsActive)
-                            join tbluser in _db.User
-                            on tblcomment.CommenterId equals tbluser.Id
-                            select new
-                            {
-                                userName = tbluser.IsActive ? tbluser.Name : "",
-                                commentBody = tbluser.IsActive ? tblcomment.Body : "",
-                                commentDate = tblcomment.UpdatedAt == null ? tblcomment.CreatedAt : tblcomment.UpdatedAt,
-                                isCurrenctUser = tbluser.Id == model.UserId ? true : false,
-                                isActiveUser = tbluser.IsActive
-                            })
-                            .OrderByDescending(z => z.commentDate)
-                            .ToList();
-
-            }
-            catch (Exception ex)
-            {
-                result.IsSuccess = false;
-                result.ErrorMessage = "Temp Server Error.";
-            }
-
-            return result;
         }
 
         public General_StatusWithData GetCategoryMedia(int mediaCategory, int periodType)

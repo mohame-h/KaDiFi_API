@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KaDiFi.Entities
 {
-    [NotMapped]
     public class General_Result
     {
         public General_Result(bool hasError = false)
@@ -25,7 +23,6 @@ namespace KaDiFi.Entities
         public dynamic Data { get; set; }
     }
 
-    [NotMapped]
     public class General_Status
     {
         public General_Status(bool isSuccess = true, string errorMessage = "")
@@ -38,7 +35,6 @@ namespace KaDiFi.Entities
         public string ErrorMessage { get; set; }
     }
 
-    [NotMapped]
     public class General_StatusWithData : General_Status
     {
         public General_StatusWithData() : base() { }

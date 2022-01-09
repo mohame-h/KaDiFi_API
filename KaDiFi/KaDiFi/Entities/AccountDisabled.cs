@@ -10,6 +10,6 @@ namespace KaDiFi.Entities
         [ForeignKey("UserId")]
         public User Users { get; set; }
 
-        public DateTime Until{ get; set; }
+        public DateTime Until { get; set; }
     }
 }
