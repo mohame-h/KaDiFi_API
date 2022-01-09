@@ -7,7 +7,7 @@ namespace KaDiFi.Entities
         public string Id { get; set; } // GUID
 
         public string Title { get; set; }
-        public string Name { get; set; }
+        //public string Name { get; set; }
 
         public string CoverSource { get; set; }
         public string Source { get; set; }
@@ -23,6 +23,6 @@ namespace KaDiFi.Entities
         [ForeignKey("PublisherId")]
         public User Users { get; set; }
     }
-   
+
 
 }

@@ -63,47 +63,34 @@ namespace KaDiFi.Helpers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public General_Status ValidateToken(List<Claim> userClaims)
+        public General_StatusWithData ValidateToken(IEnumerable<Claim> claims)
         {
             var result = new General_StatusWithData();
 
             try
             {
-                var expirationObj = userClaims.FirstOrDefault(z => z.Type == "expires")?.Value;
+                var userClaims = claims.ToList();
+                var expirationObj = userClaims.FirstOrDefault(z => z.Type == JwtRegisteredClaimNames.Exp)?.Value;
                 if (string.IsNullOrWhiteSpace(expirationObj))
                     throw new Exception();
 
-                var expirationDate = DateTime.Parse(expirationObj);
+                var expirationDate = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+                var exp = double.Parse(expirationObj);
+                expirationDate = expirationDate.AddSeconds(exp).ToLocalTime();
+                if (expirationDate <= DateTime.Now)
+                    throw new Exception();
 
-                var email = userClaims.FirstOrDefault(z => z.Type == JwtRegisteredClaimNames.Email)?.Value;
+                var email = userClaims.FirstOrDefault(z => z.Type == ClaimTypes.Email)?.Value;
                 if (email == null)
                     throw new Exception();
 
-
-
-
-                //if (userClaims.HasClaim(z => z.Type == JwtRegisteredClaimNames.Email.ToString()))
-                //{
-                //    var userEmail = userClaims.Claims.FirstOrDefault(z => z.Type == JwtRegisteredClaimNames.Email.ToString()).Value;
-                //    var userExtistanceStatus = _db.User.FirstOrDefault(z => z.Email == userEmail);
-                //    if (userExtistanceStatus == null)
-                //    {
-                //        result.IsSuccess = false;
-                //        result.ErrorMessage = General_Strings.APIInvalidTokenMessage;
-                //        return result;
-                //    }
-
-                //}
-
-
+                result.Data = email;
             }
             catch (Exception)
             {
                 result.IsSuccess = false;
                 result.ErrorMessage = General_Strings.APIInvalidTokenMessage;
             }
-
-
 
             return result;
         }
@@ -116,3 +103,21 @@ namespace KaDiFi.Helpers
 
     }
 }
+
+
+
+
+
+
+//if (userClaims.HasClaim(z => z.Type == JwtRegisteredClaimNames.Email.ToString()))
+//{
+//    var userEmail = userClaims.Claims.FirstOrDefault(z => z.Type == JwtRegisteredClaimNames.Email.ToString()).Value;
+//    var userExtistanceStatus = _db.User.FirstOrDefault(z => z.Email == userEmail);
+//    if (userExtistanceStatus == null)
+//    {
+//        result.IsSuccess = false;
+//        result.ErrorMessage = General_Strings.APIInvalidTokenMessage;
+//        return result;
+//    }
+
+//}

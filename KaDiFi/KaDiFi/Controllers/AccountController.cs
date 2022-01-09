@@ -224,17 +224,24 @@ namespace KaDiFi.Controllers
         public IActionResult ChangePassword([FromBody] ChangePasswordDTO model)
         {
             var result = new General_Result();
-
             try
             {
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
                 if (string.IsNullOrWhiteSpace(model.newPassword) || model.newPassword.Length < 5 || !StaticHelpers.validateSpecialChars(model.newPassword))
                 {
                     var passwordIssues = "Password must be 5 minimum length with specials characters!";
                     result.HasError = true;
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
                 }
-                //TODO: Get token credintials
-                var userObj = _accountBO.GetUserBy("email from token", model.oldPassword);
+                var userObj = _accountBO.GetUserBy(authenticationStatus.Data, model.oldPassword);
                 if (userObj.IsSuccess && userObj.Data == null)
                 {
                     result.HasError = true;
@@ -243,8 +250,7 @@ namespace KaDiFi.Controllers
 
                 if (!result.HasError)
                 {
-                    //TODO: 
-                    var changePasswordStatus = _accountBO.ChangeUserPassword("email from token", model.newPassword);
+                    var changePasswordStatus = _accountBO.ChangeUserPassword(authenticationStatus.Data, model.newPassword);
                     if (!changePasswordStatus.IsSuccess)
                     {
                         result.HasError = true;
@@ -267,6 +273,15 @@ namespace KaDiFi.Controllers
             var result = new General_Result();
             try
             {
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
                 if (string.IsNullOrWhiteSpace(model.password))
                 {
                     var passwordIssues = "Invalid Credintials!";
@@ -279,8 +294,7 @@ namespace KaDiFi.Controllers
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.FreezingPeriod), "Invalid Freezing period!");
                 }
 
-                //TODO: Get token credintials
-                var userObj = _accountBO.GetUserBy("email from token", model.password);
+                var userObj = _accountBO.GetUserBy(authenticationStatus.Data, model.password);
                 if (userObj.IsSuccess && userObj.Data == null)
                 {
                     result.HasError = true;
@@ -289,7 +303,7 @@ namespace KaDiFi.Controllers
 
                 if (!result.HasError)
                 {
-                    var disableAccountStatus = _accountBO.DisableAccount("email from token", model.daysCount);
+                    var disableAccountStatus = _accountBO.DisableAccount(authenticationStatus.Data, model.daysCount);
                     if (!disableAccountStatus.IsSuccess)
                     {
                         result.HasError = true;
@@ -316,7 +330,16 @@ namespace KaDiFi.Controllers
             var result = new General_Result();
             try
             {
-                var userExistance = _accountBO.GetUserBy("email from token");
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+                var userExistance = _accountBO.GetUserBy(authenticationStatus.Data);
                 if (!userExistance.IsSuccess)
                 {
                     var passwordIssues = "Inconsistant Credintials!";
@@ -326,7 +349,7 @@ namespace KaDiFi.Controllers
 
                 if (!result.HasError)
                 {
-                    var disableNewsStatus = _accountBO.DisableNews("email from token");
+                    var disableNewsStatus = _accountBO.DisableNews(authenticationStatus.Data);
                     if (!disableNewsStatus.IsSuccess)
                     {
                         result.HasError = true;

@@ -102,7 +102,6 @@ namespace KaDiFi.BOs
             }
             return result;
         }
-
         public General_Status ChangeUserPassword(string email, string newPassword)
         {
             var result = new General_Status();
@@ -122,7 +121,6 @@ namespace KaDiFi.BOs
 
             return result;
         }
-
         public General_Status DisableAccount(string email, int freezingDaysCount)
         {
             var result = new General_Status();
@@ -153,7 +151,6 @@ namespace KaDiFi.BOs
             }
             return result;
         }
-
         public General_StatusWithData GetAccess(string email, string password)
         {
             var result = new General_StatusWithData();
@@ -181,8 +178,6 @@ namespace KaDiFi.BOs
 
             return result;
         }
-
-
 
         public General_Status DisableNews(string email)
         {

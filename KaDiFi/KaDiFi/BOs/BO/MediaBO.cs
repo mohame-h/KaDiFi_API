@@ -140,6 +140,18 @@ namespace KaDiFi.BOs
                     return result;
                 }
 
+                var media = _db.Media.FirstOrDefault(z => z.Id == mediaId);
+                if (media == null)
+                    throw new Exception();
+
+                var mediaView = new MediaViews();
+                mediaView.Id = Guid.NewGuid().ToString();
+                mediaView.UserId = user.Id;
+                mediaView.MediaId = mediaId;
+                mediaView.React = (int)MediaReactTypes.None;
+                _db.MediaViews.Add(mediaView);
+                _db.SaveChanges();
+
                 var mediaItem = _db.Media.Where(z => z.Id == mediaId)
                                         .Select(z => new
                                         {
@@ -251,7 +263,6 @@ namespace KaDiFi.BOs
 
             return result;
         }
-
         public General_Status addOrRemoveMediaReact(string mediaId, int reactTypeId, string userEmail)
         {
             var result = new General_Status();
@@ -276,7 +287,6 @@ namespace KaDiFi.BOs
 
             return result;
         }
-
         public General_Status AddComment(string mediaId, string commentText, string userEmail)
         {
             var result = new General_Status();
@@ -319,7 +329,6 @@ namespace KaDiFi.BOs
 
             return result;
         }
-
         public General_Status EditComment(string commentId, string commentText, string userEmail)
         {
             var result = new General_Status();
@@ -346,7 +355,6 @@ namespace KaDiFi.BOs
 
             return result;
         }
-
         public General_StatusWithData GetMediaComments(string mediaId, int itemsCount, int pageNumber, string userEmail)
         {
             var result = new General_StatusWithData();
@@ -412,7 +420,6 @@ namespace KaDiFi.BOs
 
             return result;
         }
-
         public General_Status AddReply(string commentId, string replyText, string userEmail)
         {
             var result = new General_Status();
@@ -441,7 +448,6 @@ namespace KaDiFi.BOs
 
             return result;
         }
-
         public General_Status EditReply(string replyId, string replyText, string userEmail)
         {
             var result = new General_Status();
@@ -465,7 +471,6 @@ namespace KaDiFi.BOs
 
             return result;
         }
-
         public General_StatusWithData GetMediaReplies(string commentId, int itemsCount, int pageNumber, string userEmail)
         {
             var result = new General_StatusWithData();
@@ -504,9 +509,6 @@ namespace KaDiFi.BOs
         }
 
 
-
-
-
         public General_Status CreateMedia(Media mediaObj)
         {
             var result = new General_Status();
@@ -524,23 +526,18 @@ namespace KaDiFi.BOs
             return result;
 
         }
-
-
         public General_Status RemoveMedia(string mediaId)
         {
             throw new NotImplementedException();
         }
-
         public General_StatusWithData SearchMedia(string mediaName)
         {
             throw new NotImplementedException();
         }
-
         public General_Status UpdateMedia()
         {
             throw new NotImplementedException();
         }
-
         public string GetMediaDirectoryPath(int mediaCategory)
         {
             var path = "";
@@ -577,12 +574,10 @@ namespace KaDiFi.BOs
 
             return path;
         }
-
         public General_StatusWithData GetCategoryMedia(int mediaCategory, int periodType)
         {
             throw new NotImplementedException();
         }
-
 
 
 

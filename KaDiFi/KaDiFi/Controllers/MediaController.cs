@@ -28,6 +28,15 @@ namespace KaDiFi.Controllers
 
             try
             {
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
                 var homeMediaDataStatus = _mediaBO.GetHomeMedia();
                 if (!homeMediaDataStatus.IsSuccess)
                 {
@@ -58,8 +67,16 @@ namespace KaDiFi.Controllers
 
             try
             {
-                //TODO: Get user credintials
-                var specificMediaStatus = _mediaBO.GetSpecificMedia(model.mediaId, "email from token", model.commentsTotalCount, model.repliesTotalCount);
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+                var specificMediaStatus = _mediaBO.GetSpecificMedia(model.mediaId, authenticationStatus.Data, model.commentsTotalCount, model.repliesTotalCount);
                 if (!specificMediaStatus.IsSuccess || (specificMediaStatus.IsSuccess && specificMediaStatus.Data == null))
                 {
                     result.HasError = true;
@@ -88,8 +105,16 @@ namespace KaDiFi.Controllers
 
             try
             {
-                //TODO: Get user credintials
-                var addOrRemoveStatus = _mediaBO.addOrRemoveMediaReact(model.mediaId, model.reactTypeId, "Email from token");
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+                var addOrRemoveStatus = _mediaBO.addOrRemoveMediaReact(model.mediaId, model.reactTypeId, authenticationStatus.Data);
                 if (!addOrRemoveStatus.IsSuccess)
                 {
                     result.HasError = true;
@@ -116,8 +141,16 @@ namespace KaDiFi.Controllers
 
             try
             {
-                //TODO: Get user credintials
-                var addCommentStatus = _mediaBO.AddComment(model.mediaId, model.commentText, "Email from token");
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+                var addCommentStatus = _mediaBO.AddComment(model.mediaId, model.commentText, authenticationStatus.Data);
                 if (!addCommentStatus.IsSuccess)
                 {
                     result.HasError = true;
@@ -144,8 +177,16 @@ namespace KaDiFi.Controllers
 
             try
             {
-                //TODO: Get user credintials
-                var addOrRemoveStatus = _mediaBO.EditComment(model.commentId, model.commentText, "Email from token");
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+                var addOrRemoveStatus = _mediaBO.EditComment(model.commentId, model.commentText, authenticationStatus.Data);
                 if (!addOrRemoveStatus.IsSuccess)
                 {
                     result.HasError = true;
@@ -172,6 +213,15 @@ namespace KaDiFi.Controllers
 
             try
             {
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
                 if (string.IsNullOrWhiteSpace(model.mediaId))
                 {
                     result.HasError = true;
@@ -180,8 +230,7 @@ namespace KaDiFi.Controllers
                 model.itemsCount = model.itemsCount == 0 ? 10 : model.itemsCount;
                 model.pageNumber = model.pageNumber == 0 ? 1 : model.pageNumber;
 
-                //TODO: Get user credintials
-                var getMediaCommentsStatus = _mediaBO.GetMediaComments(model.mediaId, model.itemsCount, model.pageNumber, "Email from token");
+                var getMediaCommentsStatus = _mediaBO.GetMediaComments(model.mediaId, model.itemsCount, model.pageNumber, authenticationStatus.Data);
                 if (!getMediaCommentsStatus.IsSuccess)
                 {
                     result.HasError = true;
@@ -209,8 +258,16 @@ namespace KaDiFi.Controllers
 
             try
             {
-                //TODO: Get user credintials
-                var addReplyStatus = _mediaBO.AddReply(model.commentId, model.replyText, "Email from token");
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+                var addReplyStatus = _mediaBO.AddReply(model.commentId, model.replyText, authenticationStatus.Data);
                 if (!addReplyStatus.IsSuccess)
                 {
                     result.HasError = true;
@@ -237,8 +294,16 @@ namespace KaDiFi.Controllers
 
             try
             {
-                //TODO: Get user credintials
-                var editReplyStatus = _mediaBO.EditReply(model.id, model.text, "Email from token");
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+                var editReplyStatus = _mediaBO.EditReply(model.id, model.text, authenticationStatus.Data);
                 if (!editReplyStatus.IsSuccess)
                 {
                     result.HasError = true;
@@ -265,6 +330,15 @@ namespace KaDiFi.Controllers
 
             try
             {
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
                 if (string.IsNullOrWhiteSpace(model.commentId))
                 {
                     result.HasError = true;
@@ -273,8 +347,7 @@ namespace KaDiFi.Controllers
                 model.itemsCount = model.itemsCount == 0 ? 10 : model.itemsCount;
                 model.pageNumber = model.pageNumber == 0 ? 1 : model.pageNumber;
 
-                //TODO: Get user credintials
-                var getMediaRepliesStatus = _mediaBO.GetMediaReplies(model.commentId, model.itemsCount, model.pageNumber, "Email from token");
+                var getMediaRepliesStatus = _mediaBO.GetMediaReplies(model.commentId, model.itemsCount, model.pageNumber, authenticationStatus.Data);
                 if (!getMediaRepliesStatus.IsSuccess)
                 {
                     result.HasError = true;
