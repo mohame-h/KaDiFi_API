@@ -370,7 +370,7 @@ namespace KaDiFi.Controllers
 
         [HttpPost]
         [Route("AddDummyMedia")]
-        public IActionResult AddDummyMedia(string title, string coverSource, string mediaSource, string description, MediaTypes typeId, MediaCategories categoryId)
+        public IActionResult AddDummyMedia(string title, string coverSource, string mediaSource, string description, MediaTypes typeId = MediaTypes.Video, MediaCategories categoryId = MediaCategories.Cartoons)
         {
             var result = new General_Result();
 
