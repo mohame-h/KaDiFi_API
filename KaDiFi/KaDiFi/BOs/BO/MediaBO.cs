@@ -80,6 +80,7 @@ namespace KaDiFi.BOs
                                         ReactType = tblv.React
                                     }
                                 )
+                                .Take(8)
                                 .Select(z => new MediaResult
                                 {
                                     Id = z.Id,
@@ -92,7 +93,7 @@ namespace KaDiFi.BOs
                 homeMedia.Add("Recommended", recommended);
 
                 var cartoons = _db.Media.Where(z => z.CategoryId == (int)MediaCategories.Cartoons)
-                                        .Take(5)
+                                        .Take(8)
                                         .Select(z => new MediaResult
                                         {
                                             Id = z.Id,
@@ -105,7 +106,7 @@ namespace KaDiFi.BOs
                 homeMedia.Add(MediaCategories.Cartoons.ToString(), cartoons);
 
                 var sports = _db.Media.Where(z => z.CategoryId == (int)MediaCategories.Sports)
-                                        .Take(5)
+                                        .Take(8)
                                         .Select(z => new MediaResult
                                         {
                                             Id = z.Id,
@@ -144,14 +145,6 @@ namespace KaDiFi.BOs
                 if (media == null)
                     throw new Exception();
 
-                var mediaView = new MediaViews();
-                mediaView.Id = Guid.NewGuid().ToString();
-                mediaView.UserId = user.Id;
-                mediaView.MediaId = mediaId;
-                mediaView.React = (int)MediaReactTypes.None;
-                _db.MediaViews.Add(mediaView);
-                _db.SaveChanges();
-
                 var mediaItem = _db.Media.Where(z => z.Id == mediaId)
                                         .Select(z => new
                                         {
@@ -162,7 +155,7 @@ namespace KaDiFi.BOs
                                             z.Description,
                                             z.CreatedAt,
                                             ViewsCount = _db.MediaViews.Count(x => x.MediaId == mediaId),
-                                            UserReactType = _db.MediaViews.FirstOrDefault(x => x.MediaId == mediaId && x.UserId == user.Id),
+                                            UserReact = _db.MediaViews.FirstOrDefault(x => x.MediaId == mediaId && x.UserId == user.Id),
                                             Comments = (from tblc in _db.MediaComment.Where(c => c.MediaId == z.Id)
                                                         join tblu in _db.User
                                                         on tblc.CommenterId equals tblu.Id
@@ -204,8 +197,8 @@ namespace KaDiFi.BOs
                                                                             r.ReplyText,
                                                                             r.ReplyCreationTime,
                                                                             IsCurrentUser = r.Replier == null ? false : (r.Replier.Id == user.Id)
-                                                                        })
-                                                        })
+                                                                        }).ToList(),
+                                                        }).ToList(),
 
                                         })
                                         .Select(z => new
@@ -217,7 +210,7 @@ namespace KaDiFi.BOs
                                             z.Description,
                                             z.CreatedAt,
                                             z.ViewsCount,
-                                            z.UserReactType,
+                                            z.UserReact.React,
                                             z.Comments
 
                                         }).FirstOrDefault();
@@ -228,30 +221,42 @@ namespace KaDiFi.BOs
                     return result;
                 }
 
-                var suggestedMedia = (from tblm in _db.Media.Where(z => z.CategoryId == mediaItem.CategoryId)
-                                      join tblv in _db.MediaViews
-                                      on tblm.Id equals tblv.MediaId
+                var suggestedMedia = _db.Media.Where(z => z.CategoryId == mediaItem.CategoryId && z.Id != mediaId)
+                                        .Select(z => new
+                                        {
+                                            z.Id,
+                                            z.Title,
+                                            z.CoverSource,
+                                            z.Description,
+                                            View = _db.MediaViews.Where(x => x.MediaId == z.Id).OrderByDescending(x => x.CreatedAt).FirstOrDefault(),
+                                        })
+                                        .Select(z => new
+                                        {
+                                            z.Id,
+                                            z.Title,
+                                            z.CoverSource,
+                                            Description = string.Join(" ", z.Description.Split().Take(20)),
+                                            ViewedAt = z.View == null ? DateTime.Now.AddYears(-20) : z.View.CreatedAt,
+                                        })
+                                        .OrderByDescending(z => z.ViewedAt)
+                                        .Take(8)
+                                        .Select(z => new MediaResult
+                                        {
+                                            Id = z.Id,
+                                            Title = z.Title,
+                                            CoverSource = z.CoverSource,
+                                            Description = string.Join(" ", z.Description.Split().Take(20)),
+                                            ViewsCount = _db.MediaViews.Count(x => x.MediaId == z.Id)
+                                        })
+                                        .ToList();
 
-                                      select new
-                                      {
-                                          tblm.Id,
-                                          tblm.Title,
-                                          tblm.CoverSource,
-                                          tblm.Description,
-                                          ViewedAt = tblv.CreatedAt,
-                                      }
-                             )
-                             .OrderByDescending(z => z.ViewedAt)
-                             .Take(8)
-                             .Select(z => new MediaResult
-                             {
-                                 Id = z.Id,
-                                 Title = z.Title,
-                                 CoverSource = z.CoverSource,
-                                 Description = string.Join(" ", z.Description.Split().Take(20)),
-                                 ViewsCount = _db.MediaViews.Count(x => x.MediaId == z.Id)
-                             })
-                             .ToList();
+                var mediaView = new MediaViews();
+                mediaView.Id = Guid.NewGuid().ToString();
+                mediaView.UserId = user.Id;
+                mediaView.MediaId = mediaId;
+                mediaView.React = (int)MediaReactTypes.None;
+                _db.MediaViews.Add(mediaView);
+                _db.SaveChanges();
 
                 result.Data = new GetMediaResult() { mediaItem = mediaItem, suggestedMedia = suggestedMedia };
             }
@@ -647,3 +652,26 @@ namespace KaDiFi.BOs
         //}
     }
 }
+
+
+
+
+
+
+
+
+
+
+//(from tblm in _db.Media.Where(z => z.CategoryId == mediaItem.CategoryId)
+// join tblv in _db.MediaViews
+// on tblm.Id equals tblv.MediaId
+
+// select new
+// {
+//     tblm.Id,
+//     tblm.Title,
+//     tblm.CoverSource,
+//     tblm.Description,
+//     ViewedAt = tblv.CreatedAt,
+// }
+//                             )

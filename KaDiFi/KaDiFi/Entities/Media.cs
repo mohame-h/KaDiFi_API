@@ -7,7 +7,6 @@ namespace KaDiFi.Entities
         public string Id { get; set; } // GUID
 
         public string Title { get; set; }
-        //public string Name { get; set; }
 
         public string CoverSource { get; set; }
         public string Source { get; set; }

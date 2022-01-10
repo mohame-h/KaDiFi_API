@@ -37,9 +37,8 @@
     public enum MediaTypes
     {
         Photo = 0,
-        Image = 1,
-        Video = 2,
-        GIF = 3,
+        Video = 1,
+        GIF = 2,
 
     }
 

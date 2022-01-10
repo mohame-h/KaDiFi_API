@@ -60,7 +60,7 @@ namespace KaDiFi.Controllers
 
         [HttpGet]
         [Route("GetSpecificMedia")]
-        public IActionResult GetSpecificMedia([FromBody] GetMediaDTO model)
+        public IActionResult GetSpecificMedia(GetMediaDTO model)
         {
 
             var result = new General_ResultWithData();
