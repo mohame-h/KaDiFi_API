@@ -585,7 +585,39 @@ namespace KaDiFi.BOs
         }
 
 
+        public General_Status CreateDummyMedia(string title, string coverSource, string mediaSource, string description, MediaTypes typeId, MediaCategories categoryId, string userEmail)
+        {
+            var result = new General_Status();
+            try
+            {
+                var user = _db.User.FirstOrDefault(z => z.Email == userEmail);
+                if (user == null)
+                    throw new Exception();
 
+                var newMedia = new Media();
+                newMedia.Id = Guid.NewGuid().ToString();
+                newMedia.CategoryId = (int)categoryId;
+                newMedia.CoverSource = coverSource;
+                newMedia.CreatedAt = DateTime.Now;
+                newMedia.Description = description;
+                newMedia.IsActive = true;
+                newMedia.PublisherId = user.Id;
+                newMedia.Source = mediaSource;
+                newMedia.Title = title;
+                newMedia.Type = (int)typeId;
+
+                _db.Media.Add(newMedia);
+                _db.SaveChanges();
+
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "Temp Server Error.";
+            }
+
+            return result;
+        }
 
 
 

@@ -26,5 +26,8 @@ namespace KaDiFi.BOs.IBO
 
         string GetMediaDirectoryPath(int mediaCategory);
 
+
+        General_Status CreateDummyMedia(string title, string coverSource, string mediaSource, string description, MediaTypes typeId, MediaCategories categoryId, string userEmail);
+
     }
 }

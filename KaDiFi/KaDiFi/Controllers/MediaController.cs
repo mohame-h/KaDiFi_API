@@ -4,6 +4,7 @@ using KaDiFi.Helpers;
 using KaDiFi.Helpers.IHelper;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 
 namespace KaDiFi.Controllers
 {
@@ -367,6 +368,56 @@ namespace KaDiFi.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Route("AddDummyMedia")]
+        public IActionResult AddDummyMedia(string title, string coverSource, string mediaSource, string description, MediaTypes typeId, MediaCategories categoryId)
+        {
+            var result = new General_Result();
+
+            try
+            {
+                var claims = HttpContext.Request.HttpContext.User.Claims;
+                var authenticationStatus = _auth.ValidateToken(claims);
+                if (!authenticationStatus.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+                    return Ok(result);
+                }
+
+                if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(coverSource) || string.IsNullOrWhiteSpace(mediaSource) || string.IsNullOrWhiteSpace(description))
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.FormValidationError.ToString(), "No Empty Values Allowed!");
+                    return Ok(result);
+                }
+                var mediaTypes = new List<int>() { 0, 1, 2 };
+                var mediacategories = new List<int>() { 0, 1, 2, 3, 4 };
+                if (!mediaTypes.Contains((int)typeId) || !mediacategories.Contains((int)categoryId))
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.FormValidationError.ToString(), "Out of specified values!");
+                    return Ok(result);
+                }
+
+                var mediaa = _mediaBO.CreateDummyMedia(title, coverSource, mediaSource, description, typeId, categoryId, authenticationStatus.Data);
+                if (!mediaa.IsSuccess)
+                {
+                    result.HasError = true;
+                    result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                    return Ok(result);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.HasError = true;
+                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+                return Ok(result);
+            }
+
+            return Ok(result);
+        }
 
 
 
