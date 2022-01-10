@@ -207,7 +207,7 @@ namespace KaDiFi.Controllers
 
         [HttpGet]
         [Route("GetMediaComments")]
-        public IActionResult GetMediaComments([FromBody] GetMediaCommentsDTO model)
+        public IActionResult GetMediaComments(GetMediaCommentsDTO model)
         {
             var result = new General_ResultWithData();
 
@@ -228,7 +228,7 @@ namespace KaDiFi.Controllers
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.ParamError, FormFieldTypes.MediaId), "Invalid media, Please refresh!");
                 }
                 model.itemsCount = model.itemsCount == 0 ? 10 : model.itemsCount;
-                model.pageNumber = model.pageNumber == 0 ? 1 : model.pageNumber;
+                model.pageNumber = model.pageNumber == 0 ? 0 : (model.pageNumber - 1);
 
                 var getMediaCommentsStatus = _mediaBO.GetMediaComments(model.mediaId, model.itemsCount, model.pageNumber, authenticationStatus.Data);
                 if (!getMediaCommentsStatus.IsSuccess)
@@ -323,8 +323,8 @@ namespace KaDiFi.Controllers
         }
 
         [HttpGet]
-        [Route("GetMediaReplies")]
-        public IActionResult GetMediaReplies([FromBody] GetMediaRepliesDTO model)
+        [Route("GetMediaCommentReplies")]
+        public IActionResult GetMediaCommentReplies(GetMediaRepliesDTO model)
         {
             var result = new General_ResultWithData();
 
@@ -345,7 +345,7 @@ namespace KaDiFi.Controllers
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.ParamError, FormFieldTypes.MediaId), "issue with comment, Please refresh the page!");
                 }
                 model.itemsCount = model.itemsCount == 0 ? 10 : model.itemsCount;
-                model.pageNumber = model.pageNumber == 0 ? 1 : model.pageNumber;
+                model.pageNumber = model.pageNumber == 0 ? 0 : (model.pageNumber - 1);
 
                 var getMediaRepliesStatus = _mediaBO.GetMediaReplies(model.commentId, model.itemsCount, model.pageNumber, authenticationStatus.Data);
                 if (!getMediaRepliesStatus.IsSuccess)

@@ -275,7 +275,7 @@ namespace KaDiFi.BOs
             try
             {
                 var userId = _db.User.FirstOrDefault(z => z.Email == userEmail)?.Id;
-                var view = _db.MediaViews.FirstOrDefault(z => z.MediaId == mediaId && z.UserId == userId);
+                var view = _db.MediaViews.Where(z => z.MediaId == mediaId && z.UserId == userId).OrderByDescending(z => z.CreatedAt).FirstOrDefault();
                 if (view == null)
                     throw new Exception();
 
@@ -411,7 +411,7 @@ namespace KaDiFi.BOs
                                                     r.ReplyText,
                                                     r.ReplyCreationTime,
                                                     IsCurrentUser = r.Replier == null ? false : (r.Replier.Id == user.Id)
-                                                })
+                                                }).ToList()
                                 })
                                 .ToList();
 
