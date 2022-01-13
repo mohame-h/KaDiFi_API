@@ -178,8 +178,8 @@ namespace KaDiFi.BOs
                                                             c.CommentText,
                                                             c.CommentCreationTime,
                                                             c.IsCurrenctUser,
-                                                            TotalLikesCount = _db.MediaViews.Count(z => z.React == (int)MediaReactTypes.Like),
-                                                            TotalDislikesCount = _db.MediaViews.Count(z => z.React == (int)MediaReactTypes.Dislike),
+                                                            //TotalLikesCount = _db.MediaViews.Count(z => z.React == (int)MediaReactTypes.Like),
+                                                            //TotalDislikesCount = _db.MediaViews.Count(z => z.React == (int)MediaReactTypes.Dislike),
                                                             LastReply = _db.MediaCommentReply.Where(r => r.CommentId == c.CommentId)
                                                                         .OrderByDescending(o => o.DeletedAt == null ? o.UpdatedAt == null ? o.CreatedAt : o.UpdatedAt : o.DeletedAt)
                                                                         .Take(1)
