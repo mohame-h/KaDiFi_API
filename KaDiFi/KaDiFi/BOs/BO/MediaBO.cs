@@ -210,7 +210,7 @@ namespace KaDiFi.BOs
                                             z.CategoryId,
                                             z.Source,
                                             z.Description,
-                                            CreatedAt = z.CreatedAt.ToString("dddd, dd MMMM yyyy"),
+                                            CreatedAt = z.CreatedAt.ToString("MM/dd/yyyy"),
                                             z.ViewsCount,
                                             z.UserReact.React,
                                             z.Comments
@@ -395,7 +395,7 @@ namespace KaDiFi.BOs
                                     c.CommentId,
                                     c.CommenterName,
                                     c.CommentText,
-                                    CommentCreationTime = c.CommentCreationTime.ToString("dddd, dd MMMM yyyy"),
+                                    CommentCreationTime = c.CommentCreationTime.ToString("MM/dd/yyyy"),
                                     c.IsCurrenctUser,
                                     TotalLikesCount = _db.MediaViews.Count(z => z.React == (int)MediaReactTypes.Like),
                                     TotalDislikesCount = _db.MediaViews.Count(z => z.React == (int)MediaReactTypes.Dislike),
@@ -416,7 +416,7 @@ namespace KaDiFi.BOs
                                                     r.ReplyId,
                                                     ReplierName = r.Replier == null ? "" : r.Replier.Name,
                                                     r.ReplyText,
-                                                    ReplyCreationTime = r.ReplyCreationTime.ToString("dddd, dd MMMM yyyy"),
+                                                    ReplyCreationTime = r.ReplyCreationTime.ToString("MM/dd/yyyy"),
                                                     IsCurrentUser = r.Replier == null ? false : (r.Replier.Id == user.Id)
                                                 }).ToList()
                                 })
@@ -513,7 +513,7 @@ namespace KaDiFi.BOs
                                    z.ReplyId,
                                    z.ReplierName,
                                    z.ReplyText,
-                                   ReplyCreationTime = z.ReplyCreationTime.ToString("dddd, dd MMMM yyyy"),
+                                   ReplyCreationTime = z.ReplyCreationTime.ToString("MM/dd/yyyy"),
                                    z.IsCurrenctUser
                                })
                                .ToList();

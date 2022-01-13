@@ -172,7 +172,7 @@ namespace KaDiFi.BOs
                 }
                 else if (loginUser != null && !loginUser.IsActive && loginUserDeactivatio != null && loginUserDeactivatio.Until > DateTime.Now)
                 {
-                    result.ErrorMessage = $"Deactivated Account, won't be active till {loginUserDeactivatio.Until.ToString("dddd, dd MMMM yyyy")} \n for help contact administration";
+                    result.ErrorMessage = $"Deactivated Account, won't be active till {loginUserDeactivatio.Until.ToString("MM/dd/yyyy")} \n for help contact administration";
                     return result;
                 }
 
