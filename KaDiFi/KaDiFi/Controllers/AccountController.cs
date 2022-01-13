@@ -288,7 +288,11 @@ namespace KaDiFi.Controllers
                     result.HasError = true;
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Password), passwordIssues);
                 }
-                if (model.daysCount < 1)
+                if (model.daysCount < 1 && model.forever)
+                {
+                    model.daysCount = 999999;
+                }
+                else if (model.daysCount < 1)
                 {
                     result.HasError = true;
                     result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.FreezingPeriod), "Invalid Freezing period!");
@@ -320,51 +324,49 @@ namespace KaDiFi.Controllers
             }
         }
 
+        //[HttpPost]
+        //[Route("DisableNews")]
+        //[AllowAnonymous]
+        //public IActionResult DisableNews()
+        //{
+        //    var result = new General_Result();
+        //    try
+        //    {
+        //        var claims = HttpContext.Request.HttpContext.User.Claims;
+        //        var authenticationStatus = _auth.ValidateToken(claims);
+        //        if (!authenticationStatus.IsSuccess)
+        //        {
+        //            result.HasError = true;
+        //            result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
+        //            return Ok(result);
+        //        }
 
+        //        var userExistance = _accountBO.GetUserBy(authenticationStatus.Data);
+        //        if (!userExistance.IsSuccess)
+        //        {
+        //            var passwordIssues = "Inconsistant Credintials!";
+        //            result.HasError = true;
+        //            result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), passwordIssues);
+        //        }
 
-        [HttpPost]
-        [Route("DisableNews")]
-        [AllowAnonymous]
-        public IActionResult DisableNews()
-        {
-            var result = new General_Result();
-            try
-            {
-                var claims = HttpContext.Request.HttpContext.User.Claims;
-                var authenticationStatus = _auth.ValidateToken(claims);
-                if (!authenticationStatus.IsSuccess)
-                {
-                    result.HasError = true;
-                    result.ErrorsDictionary.Add(ErrorKeyTypes.TokenError.ToString(), authenticationStatus.ErrorMessage);
-                    return Ok(result);
-                }
-
-                var userExistance = _accountBO.GetUserBy(authenticationStatus.Data);
-                if (!userExistance.IsSuccess)
-                {
-                    var passwordIssues = "Inconsistant Credintials!";
-                    result.HasError = true;
-                    result.ErrorsDictionary.Add(string.Join("_", ErrorKeyTypes.FormValidationError, FormFieldTypes.Email), passwordIssues);
-                }
-
-                if (!result.HasError)
-                {
-                    var disableNewsStatus = _accountBO.DisableNews(authenticationStatus.Data);
-                    if (!disableNewsStatus.IsSuccess)
-                    {
-                        result.HasError = true;
-                        result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), disableNewsStatus.ErrorMessage);
-                    }
-                }
-                return Ok(result);
-            }
-            catch (Exception)
-            {
-                result.HasError = true;
-                result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
-                return Ok(result);
-            }
-        }
+        //        if (!result.HasError)
+        //        {
+        //            var disableNewsStatus = _accountBO.DisableNews(authenticationStatus.Data);
+        //            if (!disableNewsStatus.IsSuccess)
+        //            {
+        //                result.HasError = true;
+        //                result.ErrorsDictionary.Add(ErrorKeyTypes.SavingError.ToString(), disableNewsStatus.ErrorMessage);
+        //            }
+        //        }
+        //        return Ok(result);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        result.HasError = true;
+        //        result.ErrorsDictionary.Add(ErrorKeyTypes.ServerError.ToString(), General_Strings.APIIssueMessage);
+        //        return Ok(result);
+        //    }
+        //}
 
 
 

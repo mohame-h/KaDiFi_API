@@ -15,4 +15,11 @@ namespace KaDiFi.Entities
         public DateTime? DeletedAt { get; set; }
         public bool IsActive { get; set; }
     }
+
+    public class BaseId
+    {
+        public string Id { get; set; }
+    }
+
 }
+

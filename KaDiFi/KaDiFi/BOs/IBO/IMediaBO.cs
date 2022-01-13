@@ -4,7 +4,6 @@ namespace KaDiFi.BOs.IBO
 {
     public interface IMediaBO
     {
-        General_Status CreateMedia(Media mediaObj);
 
         General_StatusWithData GetHomeMedia();
         General_StatusWithData GetSpecificMedia(string mediaId, string userEmail, int commentsCount, int repliesCount);
@@ -17,14 +16,12 @@ namespace KaDiFi.BOs.IBO
         General_StatusWithData GetMediaReplies(string commentId, int itemsCount, int pageNumber, string userEmail);
 
 
-        General_StatusWithData GetCategoryMedia(int mediaCategory, int periodType);
-        General_StatusWithData SearchMedia(string mediaName);
-
-        General_Status UpdateMedia();
-
-        General_Status RemoveMedia(string mediaId);
-
-        string GetMediaDirectoryPath(int mediaCategory);
+        //General_Status CreateMedia(Media mediaObj);
+        //General_StatusWithData GetCategoryMedia(int mediaCategory, int periodType);
+        //General_StatusWithData SearchMedia(string mediaName);
+        //General_Status UpdateMedia();
+        //General_Status RemoveMedia(string mediaId);
+        //string GetMediaDirectoryPath(int mediaCategory);
 
 
         General_Status CreateDummyMedia(string title, string coverSource, string mediaSource, string description, MediaTypes typeId, MediaCategories categoryId, string userEmail);

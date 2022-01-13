@@ -21,6 +21,7 @@ namespace KaDiFi.Entities
     {
         public string password { get; set; }
         public int daysCount { get; set; }
+        public bool forever { get; set; }
     }
 
     public class LoginDTO
