@@ -88,7 +88,7 @@ namespace KaDiFi.BOs
                                     Id = z.Id,
                                     Title = z.Title,
                                     CoverSource = z.CoverSource,
-                                    Description = z.Description,
+                                    Description = string.Join(" ", z.Description.Split().Take(20)),
                                     ViewsCount = _db.MediaViews.Count(x => x.MediaId == z.Id)
                                 })
                                 .ToList();
@@ -101,7 +101,7 @@ namespace KaDiFi.BOs
                                             Id = z.Id,
                                             Title = z.Title,
                                             CoverSource = z.CoverSource,
-                                            Description = z.Description,
+                                            Description = string.Join(" ", z.Description.Split().Take(20)),
                                             ViewsCount = _db.MediaViews.Count(x => x.MediaId == z.Id)
                                         })
                                         .ToList();
@@ -114,7 +114,7 @@ namespace KaDiFi.BOs
                                             Id = z.Id,
                                             Title = z.Title,
                                             CoverSource = z.CoverSource,
-                                            Description = z.Description,
+                                            Description = string.Join(" ", z.Description.Split().Take(20)),
                                             ViewsCount = _db.MediaViews.Count(x => x.MediaId == z.Id)
                                         })
                                         .ToList();
