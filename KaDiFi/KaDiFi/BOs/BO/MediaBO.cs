@@ -120,6 +120,32 @@ namespace KaDiFi.BOs
                                         .ToList();
                 homeMedia.Add(MediaCategories.Sports.ToString(), sports);
 
+                var movies = _db.Media.Where(z => z.CategoryId == (int)MediaCategories.Movies)
+                                        .Take(8)
+                                        .Select(z => new MediaResult
+                                        {
+                                            Id = z.Id,
+                                            Title = z.Title,
+                                            CoverSource = z.CoverSource,
+                                            Description = string.Join(" ", z.Description.Split().Take(20)),
+                                            ViewsCount = _db.MediaViews.Count(x => x.MediaId == z.Id)
+                                        })
+                                        .ToList();
+                homeMedia.Add(MediaCategories.Movies.ToString(), movies);
+
+                var series = _db.Media.Where(z => z.CategoryId == (int)MediaCategories.Series)
+                                       .Take(8)
+                                       .Select(z => new MediaResult
+                                       {
+                                           Id = z.Id,
+                                           Title = z.Title,
+                                           CoverSource = z.CoverSource,
+                                           Description = string.Join(" ", z.Description.Split().Take(20)),
+                                           ViewsCount = _db.MediaViews.Count(x => x.MediaId == z.Id)
+                                       })
+                                       .ToList();
+                homeMedia.Add(MediaCategories.Series.ToString(), series);
+
                 result.Data = homeMedia;
             }
             catch (Exception ex)

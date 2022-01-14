@@ -163,16 +163,17 @@ namespace KaDiFi.BOs
 
             try
             {
-                var loginUser = _db.User.FirstOrDefault(z => z.Email == email && z.Password == password && z.IsActive);
-                var loginUserDeactivatio = _db.AccountDeactivation.FirstOrDefault(z => z.UserId == loginUser.Id);
+                var loginUser = _db.User.FirstOrDefault(z => z.Email == email && z.Password == password); //&& z.IsActive
                 if (loginUser == null)
                 {
                     result.ErrorMessage = "Invalid Credintials!";
                     return result;
                 }
-                else if (loginUser != null && !loginUser.IsActive && loginUserDeactivatio != null && loginUserDeactivatio.Until > DateTime.Now)
+
+                var loginUserDeactivatio = _db.AccountDeactivation.FirstOrDefault(z => z.UserId == loginUser.Id);
+                if (loginUser != null && !loginUser.IsActive && loginUserDeactivatio != null && loginUserDeactivatio.Until > DateTime.Now)
                 {
-                    result.ErrorMessage = $"Deactivated Account, won't be active till {loginUserDeactivatio.Until.ToString("MM/dd/yyyy")} \n for help contact administration";
+                    result.ErrorMessage = $"Deactivated Account, won't be active till {loginUserDeactivatio.Until.ToString("MM/dd/yyyy")}, for help contact administration";
                     return result;
                 }
 
