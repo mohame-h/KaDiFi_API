@@ -92,6 +92,42 @@ namespace KaDiFi.BOs
                                     ViewsCount = _db.MediaViews.Count(x => x.MediaId == z.Id)
                                 })
                                 .ToList();
+
+                if (recommended.Count == 0)
+                {
+                    recommended = (from tblm in _db.Media
+                                   join tblv in _db.MediaViews
+                                   on tblm.Id equals tblv.MediaId
+
+                                   select new
+                                   {
+                                       tblm.Id,
+                                       tblm.Title,
+                                       tblm.CoverSource,
+                                       tblm.Description,
+                                       ViewedAt = tblv.CreatedAt,
+                                       ReactType = tblv.React
+                                   })
+                                   .Select(z => new
+                                   {
+                                       Id = z.Id,
+                                       Title = z.Title,
+                                       CoverSource = z.CoverSource,
+                                       Description = string.Join(" ", z.Description.Split().Take(20)),
+                                       ViewsCount = _db.MediaViews.Count(x => x.MediaId == z.Id)
+                                   })
+                                   .OrderByDescending(z => z.ViewsCount)
+                                   .Take(8)
+                                   .Select(z => new MediaResult
+                                   {
+                                       Id = z.Id,
+                                       Title = z.Title,
+                                       CoverSource = z.CoverSource,
+                                       Description = string.Join(" ", z.Description.Split().Take(20)),
+                                       ViewsCount = _db.MediaViews.Count(x => x.MediaId == z.Id)
+                                   })
+                                   .ToList();
+                }
                 homeMedia.Add("Recommended", recommended);
 
                 var cartoons = _db.Media.Where(z => z.CategoryId == (int)MediaCategories.Cartoons)
