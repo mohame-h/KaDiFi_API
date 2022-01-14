@@ -163,7 +163,7 @@ namespace KaDiFi.BOs
 
             try
             {
-                var loginUser = _db.User.FirstOrDefault(z => z.Email == email && z.Password == password);//&& z.IsActive
+                var loginUser = _db.User.FirstOrDefault(z => z.Email == email && z.Password == password && z.IsActive);
                 var loginUserDeactivatio = _db.AccountDeactivation.FirstOrDefault(z => z.UserId == loginUser.Id);
                 if (loginUser == null)
                 {
